@@ -26,6 +26,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button getLocationButton;
     private LocationManager locationManager;
     private Toolbar toolbar_main;
+
+    private Location firstLocation = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,12 +63,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     private class MyLocationListener implements LocationListener {
+
         @Override
         public void onLocationChanged(Location location) {
-            double latitude = location.getLatitude();
-            double longitude = location.getLongitude();
-            TextView tvCoordinates = findViewById(R.id.getLocationButton);
-            tvCoordinates.setText("Ubicación: " + latitude + ", " + longitude);
+            if (firstLocation == null) {
+                firstLocation = location;
+                double latitude = firstLocation.getLatitude();
+                double longitude = firstLocation.getLongitude();
+                TextView tvCoordinates = findViewById(R.id.getLocationButton);
+                tvCoordinates.setText("Ubicación: " + latitude + ", " + longitude);
+            }
         }
 
         @Override
