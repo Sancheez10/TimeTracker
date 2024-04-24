@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">TimeTracker</string>
+    <string name="mis_cuentas">Mis cuentas</string>
+    <string name="registro_laboral">Registro laboral</string>
+    <string name="anotaciones">Anotaciones</string>
+    <string name="calendario_laboral">Calendario laboral</string>
+    <string name="horarios">Horarios</string>
+    <string name="ayuda">Ayuda</string>
+    <string name="proteccion_de_datos">Proteccion de datos</string>
 </resources>

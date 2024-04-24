@@ -1,4 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/mis_cuentas"
+        app:showAsAction="never"
+        android:title="@string/mis_cuentas"/>
+    <item
+        android:id="@+id/registro_laboral"
+        app:showAsAction="never"
+        android:title="@string/registro_laboral"/>
+    <item
+        android:id="@+id/anotaciones"
+        android:title="@string/anotaciones"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/calendario_laboral"
+        app:showAsAction="never"
+        android:title="@string/calendario_laboral" />
+    <item
+        android:id="@+id/horarios"
+        app:showAsAction="never"
+        android:title="@string/horarios" />
+    <item
+        android:id="@+id/configuracion"
+        app:showAsAction="never"
+        android:title="Configuración" />
+    <item
+        android:id="@+id/ayuda"
+        app:showAsAction="never"
+        android:title="@string/ayuda" />
+    <item
+        android:id="@+id/proteccion_de_datos"
+        app:showAsAction="never"
+        android:title="@string/proteccion_de_datos" />
 
 </menu>
