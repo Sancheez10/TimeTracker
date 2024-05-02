@@ -12,7 +12,6 @@ import android.location.LocationManager;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.Menu;
@@ -21,7 +20,7 @@ import android.widget.Button;
 import android.Manifest;
 import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+public class MainActivity extends AppCompatActivity {
 
     private Button getLocationButton;
     private LocationManager locationManager;
@@ -37,9 +36,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setSupportActionBar(toolbar_main);
 
         getLocationButton = findViewById(R.id.getLocationButton);
-        getLocationButton.setOnClickListener(this);
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
         checkLocationSettings();
     }
     @Override
@@ -48,9 +47,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return true;
     }
 
-
-    @Override
-    public void onClick(View v) {
+    public void bClickUbication(View v) {
         if (v == getLocationButton) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 checkLocationSettingsAndShowMessage();
@@ -60,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
     }
+
 
 
     private class MyLocationListener implements LocationListener {
@@ -116,7 +114,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     .show();
         }
     }
-
 
 
 }
