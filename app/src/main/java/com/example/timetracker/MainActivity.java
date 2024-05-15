@@ -12,7 +12,6 @@ import android.location.LocationManager;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.Menu;
@@ -21,11 +20,20 @@ import android.widget.Button;
 import android.Manifest;
 import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
+
+public class MainActivity extends AppCompatActivity {
 
     private Button getLocationButton;
     private LocationManager locationManager;
     private Toolbar toolbar_main;
+    private long startTime;
+    private TextView tvTimer;
+
+    private Button bStart;
+
+    private Location firstLocation = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,12 +41,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         toolbar_main = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar_main);
+        tvTimer = findViewById(R.id.tvTimer);
+        bStart = findViewById(R.id.bWork);
 
         getLocationButton = findViewById(R.id.getLocationButton);
-        getLocationButton.setOnClickListener(this);
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
         checkLocationSettings();
+
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -46,9 +57,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return true;
     }
 
-
-    @Override
-    public void onClick(View v) {
+    public void bClickUbication(View v) {
         if (v == getLocationButton) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 checkLocationSettingsAndShowMessage();
@@ -60,13 +69,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
+
     private class MyLocationListener implements LocationListener {
+
         @Override
         public void onLocationChanged(Location location) {
-            double latitude = location.getLatitude();
-            double longitude = location.getLongitude();
-            TextView tvCoordinates = findViewById(R.id.getLocationButton);
-            tvCoordinates.setText("Ubicación: " + latitude + ", " + longitude);
+            if (firstLocation == null) {
+                firstLocation = location;
+                double latitude = firstLocation.getLatitude();
+                double longitude = firstLocation.getLongitude();
+                TextView tvCoordinates = findViewById(R.id.getLocationButton);
+                tvCoordinates.setText("Ubicación: " + latitude + ", " + longitude);
+            }
         }
 
         @Override
@@ -110,7 +124,4 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     .show();
         }
     }
-
-
-
 }
