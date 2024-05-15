@@ -20,11 +20,18 @@ import android.widget.Button;
 import android.Manifest;
 import android.widget.TextView;
 
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
+
 public class MainActivity extends AppCompatActivity {
 
     private Button getLocationButton;
     private LocationManager locationManager;
     private Toolbar toolbar_main;
+    private long startTime;
+    private TextView tvTimer;
+
+    private Button bStart;
 
     private Location firstLocation = null;
     @Override
@@ -34,12 +41,15 @@ public class MainActivity extends AppCompatActivity {
 
         toolbar_main = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar_main);
+        tvTimer = findViewById(R.id.tvTimer);
+        bStart = findViewById(R.id.bWork);
 
         getLocationButton = findViewById(R.id.getLocationButton);
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
         checkLocationSettings();
+
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -114,6 +124,4 @@ public class MainActivity extends AppCompatActivity {
                     .show();
         }
     }
-
-
 }
