@@ -18,12 +18,17 @@ import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.Manifest;
+import android.widget.EditText;
 import android.widget.TextView;
+
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 
 public class MainActivity extends AppCompatActivity {
+
 
     private Button getLocationButton;
     private LocationManager locationManager;
@@ -36,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private Location firstLocation = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -124,4 +130,6 @@ public class MainActivity extends AppCompatActivity {
                     .show();
         }
     }
+
+
 }
