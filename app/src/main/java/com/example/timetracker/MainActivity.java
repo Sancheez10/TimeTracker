@@ -24,39 +24,61 @@ import android.widget.TextView;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
-
-    private Button getLocationButton;
+    private Button getLocationButton, bWorkStatus;
     private LocationManager locationManager;
     private Toolbar toolbar_main;
-    private long startTime;
-    private TextView tvTimer;
-
-    private Button bStart;
-
+    private long startTime, endTime;
+    private TextView tvTimer, tvStatus;
     private Location firstLocation = null;
+    private DatabaseReference databaseRef;
+    private boolean isWorking = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         toolbar_main = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar_main);
-        tvTimer = findViewById(R.id.tvTimer);
-        bStart = findViewById(R.id.bWork);
 
+        tvTimer = findViewById(R.id.tvTimer);
+        tvStatus = findViewById(R.id.tvStatusWork);
+        bWorkStatus = findViewById(R.id.bWork);
         getLocationButton = findViewById(R.id.getLocationButton);
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
         checkLocationSettings();
 
+        databaseRef = FirebaseDatabase.getInstance().getReference("Timer");
+
+        bWorkStatus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!isWorking) {
+                    startTime = System.currentTimeMillis();
+                    isWorking = true;
+                    tvStatus.setText("Trabajando");
+                    bWorkStatus.setText("Detener");
+                    saveEntryToDatabase(startTime);
+                } else {
+                    endTime = System.currentTimeMillis();
+                    isWorking = false;
+                    tvStatus.setText("Parado");
+                    bWorkStatus.setText("Iniciar");
+                    saveExitToDatabase(endTime);
+                    calculateAndDisplayTotalTime();
+                }
+            }
+        });
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar, menu);
@@ -74,10 +96,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-
     private class MyLocationListener implements LocationListener {
-
         @Override
         public void onLocationChanged(Location location) {
             if (firstLocation == null) {
@@ -96,7 +115,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onProviderDisabled(String provider) {
         }
-
     }
 
     private void checkLocationSettings() {
@@ -131,5 +149,29 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void saveEntryToDatabase(long entryTime) {
+        String entryTimeStr = formatTime(entryTime);
+        databaseRef.child(entryTimeStr).child("entry_time").setValue(entryTimeStr);
+    }
+
+    private void saveExitToDatabase(long exitTime) {
+        String exitTimeStr = formatTime(exitTime);
+        databaseRef.child(exitTimeStr).child("exit_time").setValue(exitTimeStr);
+    }
+
+    private String formatTime(long timeInMillis) {
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+        Date date = new Date(timeInMillis);
+        return sdf.format(date);
+    }
+
+    private void calculateAndDisplayTotalTime() {
+        long totalTime = endTime - startTime;
+        int totalSeconds = (int) (totalTime / 1000);
+        int hours = totalSeconds / 3600;
+        int minutes = (totalSeconds % 3600) / 60;
+        int seconds = totalSeconds % 60;
+        tvTimer.setText(String.format("%02d:%02d:%02d", hours, minutes, seconds));
+    }
 
 }
