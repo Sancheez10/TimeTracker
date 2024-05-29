@@ -7,4 +7,11 @@
     <string name="horarios">Horarios</string>
     <string name="ayuda">Ayuda</string>
     <string name="proteccion_de_datos">Proteccion de datos</string>
+    <string name="nombrarSubadmin">Nombrar subadministrador</string>
+    <string name="dispositivosyrestricciones">Dispositivos y restricciones</string>
+    <string name="etiquetas">Etiquetas</string>
+    <string name="exportar">Exportar empleados</string>
+    <string name="API">Documentacion de la API</string>
+    <string name="addUser">Crear nuevo empleado</string>
+    <string name="importarEmpleado">Importar empleado</string>
 </resources>
