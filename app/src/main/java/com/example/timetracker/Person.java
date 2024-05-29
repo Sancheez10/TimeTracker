@@ -24,7 +24,7 @@ public class Person {
         this.poblacion = poblacion;
     }
 
-    public Person() {
+    public Person(String email, String password) {
     }
 
     public int getEmpleadoId() {
