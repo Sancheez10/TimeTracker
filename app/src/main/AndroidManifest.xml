@@ -16,6 +16,9 @@
         android:theme="@style/Theme.TimeTracker"
         tools:targetApi="31">
         <activity
+            android:name=".AddUserFragment"
+            android:exported="false" />
+        <activity
             android:name=".AddUser"
             android:exported="false" />
         <activity
@@ -30,8 +33,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Save"
-            android:exported="true"/>
+        <activity
+            android:name=".Save"
+            android:exported="true" />
     </application>
 
 </manifest>

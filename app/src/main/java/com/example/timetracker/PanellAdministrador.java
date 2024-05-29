@@ -14,7 +14,11 @@ import android.widget.ImageButton;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,22 +45,11 @@ public class PanellAdministrador extends AppCompatActivity {
             popupMenu.getMenuInflater().inflate(R.menu.menu_adduser, popupMenu.getMenu());
 
             // Configurar los listeners para las opciones del menú
-            popupMenu.setOnMenuItemClickListener(item -> {
-                // Manejar la selección de la opción del menú
-                switch (item.getItemId()) {
-                    case R.id.action_addUser:
-                        // Abrir la ventana flotante para agregar un nuevo usuario
-                        showAddUserFragment();
-                        return true;
-                    case R.id.action_importUserFromJSON:
-                        // Código para la opción 2 (importar usuarios desde JSON)
-                        importUsersFromJSON();
-                        return true;
-                    default:
-                        return false;
-                }
-            });
-        }
+            popupMenu.setOnMenuItemClickListener(this::onAddUserMenuItemClick);
+
+            // Mostrar el menú
+            popupMenu.show();
+        });
 
         ibAddGroup.setOnClickListener(view -> {
             Intent intent = new Intent(PanellAdministrador.this, AddGroup.class);
@@ -116,71 +109,111 @@ public class PanellAdministrador extends AppCompatActivity {
             // Mostrar el menú
             popupMenu.show();
         });
+    }
 
-        private void exportarDatosFirebase () {
-            // Obtener referencia a la colección de "trabajadores" en Firebase
-            CollectionReference trabajadoresRef = FirebaseFirestore.getInstance().collection("trabajadores");
-
-            // Obtener todos los documentos de la colección
-            trabajadoresRef.get()
-                    .addOnSuccessListener(querySnapshot -> {
-                        // Crear una lista para almacenar los datos de los trabajadores
-                        List<Map<String, Object>> trabajadores = new ArrayList<>();
-
-                        // Recorrer los documentos y extraer los datos
-                        for (DocumentSnapshot document : querySnapshot.getDocuments()) {
-                            Map<String, Object> trabajador = document.getData();
-                            trabajadores.add(trabajador);
-                        }
-
-                        // Exportar los datos a un archivo CSV
-                        exportarACSV(trabajadores);
-                    })
-                    .addOnFailureListener(e -> {
-                        // Manejar el error en caso de que falle la consulta a Firebase
-                        Log.e("Firebase", "Error al obtener los datos de los trabajadores", e);
-                    });
-        }
-
-        private void exportarACSV (List < Map < String, Object >> datos){
-            try {
-                // Crear un archivo CSV en el almacenamiento externo
-                File file = new File(Environment.getExternalStorageDirectory(), "trabajadores.csv");
-                FileWriter writer = new FileWriter(file);
-
-                // Escribir los encabezados del CSV
-                writer.write("Nombre,Apellido,Cargo,Correo,Teléfono\n");
-
-                // Escribir los datos de los trabajadores en el archivo CSV
-                for (Map<String, Object> trabajador : datos) {
-                    String nombre = trabajador.get("nombre").toString();
-                    String apellido = trabajador.get("apellido").toString();
-                    String cargo = trabajador.get("cargo").toString();
-                    String correo = trabajador.get("correo").toString();
-                    String telefono = trabajador.get("telefono").toString();
-                    writer.write(nombre + "," + apellido + "," + cargo + "," + correo + "," + telefono + "\n");
-                }
-
-                writer.flush();
-                writer.close();
-
-                // Mostrar un mensaje de éxito o abrir el archivo exportado
-                Toast.makeText(this, "Datos exportados correctamente", Toast.LENGTH_SHORT).show();
-            } catch (IOException e) {
-                // Manejar el error en caso de que falle la exportación a CSV
-                Log.e("Firebase", "Error al exportar los datos a CSV", e);
-            }
-        }
-
-        private void showAddUserFragment () {
-            // Crear una instancia del fragmento AddUserFragment
-            AddUserFragment addUserFragment = new AddUserFragment();
-
-            // Mostrar el fragmento en la actividad
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .add(R.id.fragment_container, addUserFragment)
-                    .commit();
+    private boolean onAddUserMenuItemClick(MenuItem item) {
+        // Manejar la selección de la opción del menú
+        if (item.getItemId() == R.id.action_addUser) {
+            // Abrir la ventana flotante para agregar un nuevo usuario
+            showAddUserFragment();
+            return true;
+        } else if (item.getItemId() == R.id.action_importUserFromJSON) {
+            // Código para la opción 2 (importar usuarios desde JSON)
+            importUsersFromJSON();
+            return true;
+        } else {
+            return false;
         }
     }
+
+
+    private void importUsersFromJSON() {
+        try {
+            // Leer el archivo JSON desde el sistema de archivos
+            File file = new File(Environment.getExternalStorageDirectory(), "users.json");
+            StringBuilder stringBuilder = new StringBuilder();
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                stringBuilder.append(line);
+            }
+            bufferedReader.close();
+
+            // Parsear el JSON y obtener la lista de usuarios
+            Gson gson = new Gson();
+            User[] users = gson.fromJson(stringBuilder.toString(), User[].class);
+
+            // Guardar los usuarios en la base de datos
+            for (User user : users) {
+                // Aquí debes agregar la lógica para guardar el usuario en la base de datos
+            }
+
+            Toast.makeText(this, "Usuarios importados correctamente", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            Log.e("ImportUsers", "Error al importar usuarios desde JSON", e);
+            Toast.makeText(this, "Error al importar usuarios", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void exportarDatosFirebase () {
+        // Obtener referencia a la colección de "trabajadores" en Firebase
+        CollectionReference trabajadoresRef = FirebaseFirestore.getInstance().collection("trabajadores");
+
+        // Obtener todos los documentos de la colección
+        trabajadoresRef.get()
+                .addOnSuccessListener(querySnapshot -> {
+                    // Crear una lista para almacenar los datos de los trabajadores
+                    List<Map<String, Object>> trabajadores = new ArrayList<>();
+
+                    // Recorrer los documentos y extraer los datos
+                    for (DocumentSnapshot document : querySnapshot.getDocuments()) {
+                        Map<String, Object> trabajador = document.getData();
+                        trabajadores.add(trabajador);
+                    }
+
+                    // Exportar los datos a un archivo CSV
+                    exportarACSV(trabajadores);
+                })
+                .addOnFailureListener(e -> {
+                    // Manejar el error en caso de que falle la consulta a Firebase
+                    Log.e("Firebase", "Error al obtener los datos de los trabajadores", e);
+                });
+    }
+
+    private void exportarACSV (List < Map < String, Object >> datos){
+        try {
+            // Crear un archivo CSV en el almacenamiento externo
+            File file = new File(Environment.getExternalStorageDirectory(), "trabajadores.csv");
+            FileWriter writer = new FileWriter(file);
+
+            // Escribir los encabezados del CSV
+            writer.write("Nombre,Apellido,Cargo,Correo,Teléfono\n");
+
+            // Escribir los datos de los trabajadores en el archivo CSV
+            for (Map<String, Object> trabajador : datos) {
+                String nombre = trabajador.get("nombre").toString();
+                String apellido = trabajador.get("apellido").toString();
+                String cargo = trabajador.get("cargo").toString();
+                String correo = trabajador.get("correo").toString();
+                String telefono = trabajador.get("telefono").toString();
+                writer.write(nombre + "," + apellido + "," + cargo + "," + correo + "," + telefono + "\n");
+            }
+
+            writer.flush();
+            writer.close();
+
+            // Mostrar un mensaje de éxito o abrir el archivo exportado
+            Toast.makeText(this, "Datos exportados correctamente", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            // Manejar el error en caso de que falle la exportación a CSV
+            Log.e("Firebase", "Error al exportar los datos a CSV", e);
+        }
+    }
+
+    private void showAddUserFragment() {
+        AddUserFragment addUserFragment = new AddUserFragment();
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, addUserFragment, "add_user_fragment")
+                .addToBackStack(null)
+                .commit();    }
 }
