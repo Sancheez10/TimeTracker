@@ -5,29 +5,31 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
 public class PanellAdministrador extends AppCompatActivity {
 
     private ImageButton ibAddUser, ibAddGroup, ibConfig, ibAyuda;
+    private CollectionReference workersCollection;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,175 +47,174 @@ public class PanellAdministrador extends AppCompatActivity {
             popupMenu.getMenuInflater().inflate(R.menu.menu_adduser, popupMenu.getMenu());
 
             // Configurar los listeners para las opciones del menú
-            popupMenu.setOnMenuItemClickListener(this::onAddUserMenuItemClick);
+            popupMenu.setOnMenuItemClickListener(item -> {
+                // Manejar la selección de la opción del menú
+                if (item.getItemId() == R.id.action_importUserFromJSON) {
+                    importWorkersFromJSON();
+                    return true;
+                } else if (item.getItemId() == R.id.action_addUser) {
+                    abrirVentanaFlotanteAddWorker();
+                    return true;
+                }
+                return false;
+            });
 
             // Mostrar el menú
             popupMenu.show();
         });
 
         ibAddGroup.setOnClickListener(view -> {
-            Intent intent = new Intent(PanellAdministrador.this, AddGroup.class);
-            startActivity(intent);
+            // Código para abrir una ventana flotante y pedir el nombre del grupo
+            abrirVentanaFlotanteAddGroup();
         });
 
         ibAyuda.setOnClickListener(view -> {
-            Intent intent = new Intent(PanellAdministrador.this, Ayuda.class);
-            startActivity(intent);
+            // Código para abrir la actividad de Ayuda
+            abrirActividadAyuda();
         });
 
         ibConfig.setOnClickListener(view -> {
-            // Inflar el menú a partir del archivo XML
-            PopupMenu popupMenu = new PopupMenu(this, ibConfig);
-            popupMenu.getMenuInflater().inflate(R.menu.menu_config_admin, popupMenu.getMenu());
-
-            // Configurar los listeners para las opciones del menú
-            popupMenu.setOnMenuItemClickListener(item -> {
-                // Manejar la selección de la opción del menú
-                switch (item.getItemId()) {
-                    case R.id.action_nombrarSubadmin:
-                        // Código para la opción 1
-                        Intent intent = new Intent(PanellAdministrador.this, NombrarSubadmin.class);
-                        startActivity(intent);
-                        return true;
-                    case R.id.action_anotaciones:
-                        // Código para la opción 2
-                        Intent intent2 = new Intent(PanellAdministrador.this, Anotaciones.class);
-                        startActivity(intent2);
-                        return true;
-                    case R.id.action_dispositivosRestricciones:
-                        // Código para la opción 3
-                        Intent intent3 = new Intent(PanellAdministrador.this, DispositivosRestricciones.class);
-                        startActivity(intent3);
-                        return true;
-                    case R.id.action_etiquetas:
-                        // Código para la opción 4
-                        Intent intent4 = new Intent(PanellAdministrador.this, Etiquetas.class);
-                        startActivity(intent4);
-                        return true;
-                    case R.id.action_exportar:
-                        // Código para la opción 5
-                        exportarDatosFirebase();
-                        return true;
-                    case R.id.action_API:
-                        // Código para la opción 6
-                        String url = "https://www.relojlaboral.com/wiki/index.php/P%C3%A1gina_principal";
-                        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                        startActivity(browserIntent);
-                        return true;
-                    return true;
-                    default:
-                        return false;
-                }
-            });
-
-            // Mostrar el menú
-            popupMenu.show();
+            // Código para abrir el menú de configuración del administrador
+            abrirMenuConfiguracionAdmin();
         });
     }
 
-    private boolean onAddUserMenuItemClick(MenuItem item) {
-        // Manejar la selección de la opción del menú
-        if (item.getItemId() == R.id.action_addUser) {
-            // Abrir la ventana flotante para agregar un nuevo usuario
-            showAddUserFragment();
-            return true;
-        } else if (item.getItemId() == R.id.action_importUserFromJSON) {
-            // Código para la opción 2 (importar usuarios desde JSON)
-            importUsersFromJSON();
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-
-    private void importUsersFromJSON() {
+    private void importWorkersFromJSON() {
+        // Código para importar trabajadores desde JSON
+        // Leer el archivo JSON desde el almacenamiento externo
         try {
-            // Leer el archivo JSON desde el sistema de archivos
-            File file = new File(Environment.getExternalStorageDirectory(), "users.json");
-            StringBuilder stringBuilder = new StringBuilder();
+            File file = new File(getExternalFilesDir(null), "workers.json");
             BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
+            StringBuilder stringBuilder = new StringBuilder();
             String line;
             while ((line = bufferedReader.readLine()) != null) {
                 stringBuilder.append(line);
             }
             bufferedReader.close();
 
-            // Parsear el JSON y obtener la lista de usuarios
+            // Convertir el JSON a una lista de trabajadores
             Gson gson = new Gson();
-            User[] users = gson.fromJson(stringBuilder.toString(), User[].class);
+            Type type = new TypeToken<List<Map<String, Object>>>() {
+            }.getType();
+            List<Map<String, Object>> workersList = gson.fromJson(stringBuilder.toString(), type);
 
-            // Guardar los usuarios en la base de datos
-            for (User user : users) {
-                // Aquí debes agregar la lógica para guardar el usuario en la base de datos
+            // Guardar los trabajadores en Firestore
+            for (Map<String, Object> worker : workersList) {
+                workersCollection.add(worker).addOnSuccessListener(documentReference -> Log.d("IMPORT", "Trabajador importado exitosamente")).addOnFailureListener(e -> Log.e("IMPORT", "Error al importar trabajador", e));
             }
-
-            Toast.makeText(this, "Usuarios importados correctamente", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Trabajadores importados correctamente", Toast.LENGTH_SHORT).show();
         } catch (IOException e) {
-            Log.e("ImportUsers", "Error al importar usuarios desde JSON", e);
-            Toast.makeText(this, "Error al importar usuarios", Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+            Toast.makeText(this, "Error al importar trabajadores desde JSON", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void exportarDatosFirebase () {
-        // Obtener referencia a la colección de "trabajadores" en Firebase
-        CollectionReference trabajadoresRef = FirebaseFirestore.getInstance().collection("trabajadores");
+    private void abrirVentanaFlotanteAddWorker() {
+        // Código para abrir una ventana flotante para añadir un trabajador
+        AddWorkerFragment addWorkerFragment = new AddWorkerFragment();
+        addWorkerFragment.show(getSupportFragmentManager(), "add_worker_fragment");
+    }
+
+    private void abrirVentanaFlotanteAddGroup() {
+        // Código para abrir una ventana flotante y pedir el nombre del grupo
+        AddGroupFragment addGroupFragment = new AddGroupFragment();
+        addGroupFragment.show(getSupportFragmentManager(), "add_group_fragment");
+    }
+
+    private void abrirActividadAyuda() {
+        // Código para abrir la actividad de Ayuda
+        Intent intent = new Intent(PanellAdministrador.this, Ayuda.class);
+        startActivity(intent);
+    }
+
+    private void abrirMenuConfiguracionAdmin() {
+        // Inflar el menú a partir del archivo XML
+        PopupMenu popupMenu = new PopupMenu(this, ibConfig);
+        popupMenu.getMenuInflater().inflate(R.menu.menu_config_admin, popupMenu.getMenu());
+
+        // Configurar los listeners para las opciones del menú
+        popupMenu.setOnMenuItemClickListener(item -> {
+            // Manejar la selección de la opción del menú
+            if (item.getItemId() == R.id.action_nombrarSubadmin) {
+                abrirActividadNombrarSubadmin();
+                return true;
+            } else if (item.getItemId() == R.id.action_anotaciones) {
+                abrirActividadAnotaciones();
+                return true;
+            } else if (item.getItemId() == R.id.action_dispositivosRestricciones) {
+                abrirActividadDispositivosRestricciones();
+                return true;
+            } else if (item.getItemId() == R.id.action_etiquetas) {
+                abrirActividadEtiquetas();
+                return true;
+            } else if (item.getItemId() == R.id.action_exportar) {
+                exportWorkersToJSON();
+                return true;
+            } else if (item.getItemId() == R.id.action_API) {
+                abrirPaginaWebAPI();
+                return true;
+            }
+            return false;
+        });
+
+        // Mostrar el menú
+        popupMenu.show();
+    }
+
+    private void abrirActividadNombrarSubadmin() {
+        Intent intent = new Intent(PanellAdministrador.this, NombrarSubadmin.class);
+        startActivity(intent);
+    }
+
+    private void abrirActividadAnotaciones() {
+        Intent intent = new Intent(PanellAdministrador.this, Anotaciones.class);
+        startActivity(intent);
+    }
+
+    private void abrirActividadDispositivosRestricciones() {
+        Intent intent = new Intent(PanellAdministrador.this, DispositivosRestricciones.class);
+        startActivity(intent);
+    }
+
+    private void abrirActividadEtiquetas() {
+        Intent intent = new Intent(PanellAdministrador.this, Etiquetas.class);
+        startActivity(intent);
+    }
+
+    private void exportWorkersToJSON() {
+        // Código para exportar datos a Firebase
+        // Obtener referencia a la colección de "trabajadores" en Firestore
+        workersCollection = FirebaseFirestore.getInstance().collection("trabajadores");
 
         // Obtener todos los documentos de la colección
-        trabajadoresRef.get()
-                .addOnSuccessListener(querySnapshot -> {
-                    // Crear una lista para almacenar los datos de los trabajadores
-                    List<Map<String, Object>> trabajadores = new ArrayList<>();
+        workersCollection.get().addOnSuccessListener(queryDocumentSnapshots -> {
+            // Obtener la lista de trabajadores
+            List<Map<String, Object>> workersList = queryDocumentSnapshots.toObjects(new TypeToken<List<Map<String, Object>>>() {}.getType());
 
-                    // Recorrer los documentos y extraer los datos
-                    for (DocumentSnapshot document : querySnapshot.getDocuments()) {
-                        Map<String, Object> trabajador = document.getData();
-                        trabajadores.add(trabajador);
-                    }
+            // Convertir la lista de trabajadores a JSON
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            String json = gson.toJson(workersList);
 
-                    // Exportar los datos a un archivo CSV
-                    exportarACSV(trabajadores);
-                })
-                .addOnFailureListener(e -> {
-                    // Manejar el error en caso de que falle la consulta a Firebase
-                    Log.e("Firebase", "Error al obtener los datos de los trabajadores", e);
-                });
-    }
-
-    private void exportarACSV (List < Map < String, Object >> datos){
-        try {
-            // Crear un archivo CSV en el almacenamiento externo
-            File file = new File(Environment.getExternalStorageDirectory(), "trabajadores.csv");
-            FileWriter writer = new FileWriter(file);
-
-            // Escribir los encabezados del CSV
-            writer.write("Nombre,Apellido,Cargo,Correo,Teléfono\n");
-
-            // Escribir los datos de los trabajadores en el archivo CSV
-            for (Map<String, Object> trabajador : datos) {
-                String nombre = trabajador.get("nombre").toString();
-                String apellido = trabajador.get("apellido").toString();
-                String cargo = trabajador.get("cargo").toString();
-                String correo = trabajador.get("correo").toString();
-                String telefono = trabajador.get("telefono").toString();
-                writer.write(nombre + "," + apellido + "," + cargo + "," + correo + "," + telefono + "\n");
+            // Guardar el JSON en un archivo
+            try {
+                File file = new File(getExternalFilesDir(null), "workers.json");
+                FileWriter writer = new FileWriter(file);
+                writer.write(json);
+                writer.close();
+                Toast.makeText(this, "Trabajadores exportados correctamente", Toast.LENGTH_SHORT).show();
+            } catch (IOException e) {
+                e.printStackTrace();
+                Toast.makeText(this, "Error al exportar trabajadores", Toast.LENGTH_SHORT).show();
             }
-
-            writer.flush();
-            writer.close();
-
-            // Mostrar un mensaje de éxito o abrir el archivo exportado
-            Toast.makeText(this, "Datos exportados correctamente", Toast.LENGTH_SHORT).show();
-        } catch (IOException e) {
-            // Manejar el error en caso de que falle la exportación a CSV
-            Log.e("Firebase", "Error al exportar los datos a CSV", e);
-        }
+        }).addOnFailureListener(e -> {
+            e.printStackTrace();
+            Toast.makeText(this, "Error al obtener trabajadores de Firestore", Toast.LENGTH_SHORT).show();
+        });
     }
 
-    private void showAddUserFragment() {
-        AddUserFragment addUserFragment = new AddUserFragment();
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, addUserFragment, "add_user_fragment")
-                .addToBackStack(null)
-                .commit();    }
+    private void abrirPaginaWebAPI() {
+        String url = "https://www.relojlaboral.com/wiki/index.php/P%C3%A1gina_principal";
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        startActivity(browserIntent);
+    }
 }
