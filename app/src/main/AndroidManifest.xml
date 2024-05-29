@@ -16,10 +16,10 @@
         android:theme="@style/Theme.TimeTracker"
         tools:targetApi="31">
         <activity
-            android:name=".AddGroupFragment"
+            android:name=".AddUserFragment"
             android:exported="false" />
         <activity
-            android:name=".AddWorkerFragment"
+            android:name=".AddUser"
             android:exported="false" />
         <activity
             android:name=".PanellAdministrador"
