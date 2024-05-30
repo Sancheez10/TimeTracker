@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />s
 
     <application
         android:allowBackup="true"
@@ -16,12 +15,6 @@
         android:theme="@style/Theme.TimeTracker"
         tools:targetApi="31">
         <activity
-            android:name=".AddUserFragment"
-            android:exported="false" />
-        <activity
-            android:name=".AddUser"
-            android:exported="false" />
-        <activity
             android:name=".PanellAdministrador"
             android:exported="false" />
         <activity
@@ -33,9 +26,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".Save"
-            android:exported="true" />
+        <activity android:name=".AuthActivity"
+            android:exported="true"/>
     </application>
 
 </manifest>
