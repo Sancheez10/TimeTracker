@@ -4,21 +4,22 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
+
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.LocationManager;
-
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.Manifest;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import com.google.firebase.database.DatabaseReference;
@@ -33,11 +34,14 @@ public class MainActivity extends AppCompatActivity {
     private Button getLocationButton, bWorkStatus;
     private LocationManager locationManager;
     private Toolbar toolbar_main;
-    private long startTime, endTime;
-    private TextView tvTimer, tvStatus;
+    private long startTime, endTime, elapsedTime;
+    private TextView tvTimer, tvStatus, tvWelcome;
     private Location firstLocation = null;
     private DatabaseReference databaseRef;
     private boolean isWorking = false;
+    private SharedPreferences sharedPreferences;
+    private Handler handler = new Handler();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,10 +53,20 @@ public class MainActivity extends AppCompatActivity {
 
         tvTimer = findViewById(R.id.tvTimer);
         tvStatus = findViewById(R.id.tvStatusWork);
+        tvWelcome = findViewById(R.id.tvWelcome);
         bWorkStatus = findViewById(R.id.bWork);
         getLocationButton = findViewById(R.id.getLocationButton);
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+        // Inicializar SharedPreferences
+        sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
+
+        // Obtener el correo electrónico del usuario desde SharedPreferences
+        String email = sharedPreferences.getString("email", "Usuario");
+
+        // Mostrar un mensaje de bienvenida
+        tvWelcome.setText("Bienvenido, " + email);
 
         checkLocationSettings();
 
@@ -67,16 +81,46 @@ public class MainActivity extends AppCompatActivity {
                     tvStatus.setText("Trabajando");
                     bWorkStatus.setText("Detener");
                     saveEntryToDatabase(startTime);
+                    startTimer();
                 } else {
                     endTime = System.currentTimeMillis();
                     isWorking = false;
                     tvStatus.setText("Parado");
                     bWorkStatus.setText("Iniciar");
                     saveExitToDatabase(endTime);
+                    stopTimer();
                     calculateAndDisplayTotalTime();
                 }
             }
         });
+    }
+
+    private void startTimer() {
+        handler.postDelayed(timerRunnable, 1000); // Actualizar cada segundo
+    }
+
+    // Método para detener el contador
+    private void stopTimer() {
+        handler.removeCallbacks(timerRunnable);
+    }
+
+    private Runnable timerRunnable = new Runnable() {
+        @Override
+        public void run() {
+            elapsedTime = System.currentTimeMillis() - startTime;
+            updateTimer(elapsedTime);
+            handler.postDelayed(this, 1000);
+        }
+    };
+
+    // Método para actualizar el texto del contador
+    private void updateTimer(long timeInMillis) {
+        int seconds = (int) (timeInMillis / 1000);
+        int hours = seconds / 3600;
+        int minutes = (seconds % 3600) / 60;
+        seconds = seconds % 60;
+        String timeFormatted = String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds);
+        tvTimer.setText(timeFormatted);
     }
 
     @Override
@@ -150,14 +194,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void saveEntryToDatabase(long entryTime) {
+        String userId = sharedPreferences.getString("userId", "");
         String entryTimeStr = formatTime(entryTime);
-        databaseRef.child(entryTimeStr).child("entry_time").setValue(entryTimeStr);
+
+        // Crear un nuevo nodo para el usuario en la base de datos
+        DatabaseReference userRef = databaseRef.child("Timer").child(userId);
+
+        // Guardar la hora de entrada del usuario
+        userRef.child("entry_time").setValue(entryTimeStr);
     }
 
+
     private void saveExitToDatabase(long exitTime) {
+        String userId = sharedPreferences.getString("userId", "");
         String exitTimeStr = formatTime(exitTime);
-        databaseRef.child(exitTimeStr).child("exit_time").setValue(exitTimeStr);
+
+        // Obtener la referencia al nodo del usuario en la base de datos
+        DatabaseReference userRef = databaseRef.child("Timer").child(userId);
+
+        // Guardar la hora de salida del usuario
+        userRef.child("exit_time").setValue(exitTimeStr);
     }
+
 
     private String formatTime(long timeInMillis) {
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
@@ -171,7 +229,41 @@ public class MainActivity extends AppCompatActivity {
         int hours = totalSeconds / 3600;
         int minutes = (totalSeconds % 3600) / 60;
         int seconds = totalSeconds % 60;
-        tvTimer.setText(String.format("%02d:%02d:%02d", hours, minutes, seconds));
+
+        String userId = sharedPreferences.getString("userId", "");
+
+        // Obtener la referencia al nodo del usuario en la base de datos
+        DatabaseReference userRef = databaseRef.child("Timer").child(userId);
+
+        // Obtener el tiempo total trabajado anteriormente por el usuario
+        String previousTotalTimeStr = sharedPreferences.getString("totalTimeWorked", "00:00:00");
+
+        // Convertir el tiempo total trabajado anteriormente a horas, minutos y segundos
+        String[] previousTotalTimeParts = previousTotalTimeStr.split(":");
+        int previousHours = Integer.parseInt(previousTotalTimeParts[0]);
+        int previousMinutes = Integer.parseInt(previousTotalTimeParts[1]);
+        int previousSeconds = Integer.parseInt(previousTotalTimeParts[2]);
+
+        // Calcular el nuevo tiempo total trabajado sumando el tiempo anterior y el actual
+        int newTotalSeconds = (previousHours * 3600) + (previousMinutes * 60) + previousSeconds + totalSeconds;
+        int newHours = newTotalSeconds / 3600;
+        int newMinutes = (newTotalSeconds % 3600) / 60;
+        int newSeconds = newTotalSeconds % 60;
+
+        // Formatear el nuevo tiempo total trabajado como una cadena HH:mm:ss
+        String newTotalTimeStr = String.format(Locale.getDefault(), "%02d:%02d:%02d", newHours, newMinutes, newSeconds);
+
+        // Guardar el nuevo tiempo total trabajado en las preferencias
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("totalTimeWorked", newTotalTimeStr);
+        editor.apply();
+
+        // Actualizar el tiempo total trabajado en la base de datos
+        userRef.child("total_hours_worked").setValue(newTotalTimeStr);
+
+        // Actualizar el TextView con el nuevo tiempo total trabajado
+        tvTimer.setText(newTotalTimeStr);
     }
+
 
 }
