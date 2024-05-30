@@ -4,6 +4,7 @@ public class Worker {
     private String id;
     private String name;
     private String surname;
+    private String password;
     private String email;
     private String phone;
     private String city;
@@ -17,7 +18,7 @@ public class Worker {
     public Worker() {}
 
     // Constructor con todos los campos
-    public Worker(String id, String name, String surname, String email, String phone, String city, long checkInTime, long checkOutTime, boolean isSubAdmin) {
+    public Worker(String id, String name, String surname, String email, String phone, String city, long checkInTime, long checkOutTime, boolean isSubAdmin, String password) {
         this.id = id;
         this.name = name;
         this.surname = surname;
@@ -28,7 +29,13 @@ public class Worker {
         this.checkOutTime = checkOutTime;
         this.totalDailyHours = calculateTotalDailyHours(checkInTime, checkOutTime);
         this.isSubAdmin = isSubAdmin;
+        this.password = password;
 
+    }
+
+    public Worker(String email, String password) {
+        this.email = email;
+        this.password = password;
     }
 
     // Getters y setters

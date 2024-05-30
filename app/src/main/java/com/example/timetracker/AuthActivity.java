@@ -127,7 +127,7 @@ public class AuthActivity extends AppCompatActivity {
 
     private void saveUserData(String userId, String email, String password) {
         // Crear un objeto de usuario con los datos que deseas guardar
-        Person user = new Person(email, password);
+        Worker user = new Worker(email, password);
 
         // Guardar los datos del usuario en la base de datos
         databaseRef.child(userId).setValue(user)

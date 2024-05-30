@@ -34,7 +34,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".Save"
+            android:name=".AuthActivity"
             android:exported="true" />
     </application>
 
