@@ -1,0 +1,87 @@
+<!-- activity_main.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="5dp">
+
+    <!-- Encabezado -->
+    <TextView
+        android:id="@+id/tvHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nombrar subadministrador"
+        android:textSize="24sp"
+        android:layout_gravity="center"
+        android:padding="16dp"/>
+
+    <!-- Campo de Búsqueda -->
+    <EditText
+        android:id="@+id/etSearch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Buscar usuario"
+        android:padding="16dp"/>
+
+    <!-- Lista de subadministradores -->
+    <ListView
+        android:id="@+id/lvSubAdmins"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="16dp"/>
+
+    <!-- RadioGroup con RadioButtons -->
+    <RadioGroup
+        android:id="@+id/rgOptions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <RadioButton
+            android:id="@+id/rbOption1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Reciben e-mails y notificaciones todos los administradores y subadministradores"
+            android:layout_marginTop="5dp"/>
+
+        <RadioButton
+            android:id="@+id/rbOption2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Solo reciben e-mails y notificaciones todos los subadministradores"
+            android:layout_marginTop="5dp"/>
+
+    </RadioGroup>
+
+    <!-- CheckBox -->
+    <CheckBox
+        android:id="@+id/cbOption"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Los suadministradores pueden recargar la cuenta, ver las facturas y recibir avisos de saldo bajo"
+        android:padding="16dp"
+        android:layout_marginTop="5dp"/>
+
+    <!-- Botones -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/btnClose"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cerrar"
+            android:layout_marginEnd="16dp"/>
+
+        <Button
+            android:id="@+id/btnGuardar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Guardar"/>
+
+    </LinearLayout>
+</LinearLayout>

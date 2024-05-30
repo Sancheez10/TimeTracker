@@ -11,6 +11,7 @@ import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -22,6 +23,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -187,9 +189,15 @@ public class PanellAdministrador extends AppCompatActivity {
         workersCollection = FirebaseFirestore.getInstance().collection("trabajadores");
 
         // Obtener todos los documentos de la colección
-        workersCollection.get().addOnSuccessListener(queryDocumentSnapshots -> {
-            // Obtener la lista de trabajadores
-            List<Map<String, Object>> workersList = queryDocumentSnapshots.toObjects(new TypeToken<List<Map<String, Object>>>() {}.getType());
+        workersCollection.get().addOnSuccessListener(querySnapshot -> {
+            // Crear una lista para almacenar los datos de los trabajadores
+            List<Map<String, Object>> workersList = new ArrayList<>();
+
+            // Recorrer los documentos y extraer los datos
+            for (DocumentSnapshot document : querySnapshot.getDocuments()) {
+                Map<String, Object> workerData = document.getData();
+                workersList.add(workerData);
+            }
 
             // Convertir la lista de trabajadores a JSON
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
