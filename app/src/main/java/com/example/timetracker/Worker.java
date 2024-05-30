@@ -1,6 +1,7 @@
 package com.example.timetracker;
 
 public class Worker {
+    private String nieNif;
     private String id;
     private String name;
     private String surname;
@@ -13,12 +14,9 @@ public class Worker {
     private double totalDailyHours; // Horas totales diarias
     private boolean isSubAdmin; // Campo booleano para indicar si es subadministrador
 
-
-    // Constructor vacío necesario para Firebase
-    public Worker() {}
-
     // Constructor con todos los campos
-    public Worker(String id, String name, String surname, String email, String phone, String city, long checkInTime, long checkOutTime, boolean isSubAdmin, String password) {
+    public Worker(String id, String name, String surname, String email, String phone, String city,
+                  long checkInTime, long checkOutTime, boolean isSubAdmin, String password, String nieNif) {
         this.id = id;
         this.name = name;
         this.surname = surname;
@@ -30,12 +28,21 @@ public class Worker {
         this.totalDailyHours = calculateTotalDailyHours(checkInTime, checkOutTime);
         this.isSubAdmin = isSubAdmin;
         this.password = password;
+        this.nieNif = nieNif;
 
     }
 
     public Worker(String email, String password) {
         this.email = email;
         this.password = password;
+    }
+
+    public Worker(String nombre, String apellidos, String email, String telefono, String nieNif) {
+        this.name = nombre;
+        this.surname = apellidos;
+        this.email = email;
+        this.phone = telefono;
+        this.nieNif = nieNif;
     }
 
     // Getters y setters
@@ -52,6 +59,10 @@ public class Worker {
     public String getCity() { return city; }
     public void setCity(String city) { this.city = city; }
     public long getCheckInTime() { return checkInTime; }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+    public String getNieNif() { return nieNif; }
+    public void setNieNif(String nieNif) { this.nieNif = nieNif; }
     public void setCheckInTime(long checkInTime) {
         this.checkInTime = checkInTime;
         updateTotalDailyHours();

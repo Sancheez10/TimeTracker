@@ -12,9 +12,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
+import com.example.timetracker.FirebaseHelper;
+import com.example.timetracker.Worker;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class AddWorkerFragment extends DialogFragment {
@@ -22,7 +25,7 @@ public class AddWorkerFragment extends DialogFragment {
     private EditText etNombre, etApellidos, etEmail, etTelefono, etNIE_NIF;
     private Button btnGuardar;
 
-    private FirebaseFirestore db;
+    private FirebaseHelper firebaseHelper;
 
     @Nullable
     @Override
@@ -36,7 +39,7 @@ public class AddWorkerFragment extends DialogFragment {
         etNIE_NIF = view.findViewById(R.id.etNIE_NIF);
         btnGuardar = view.findViewById(R.id.btnGuardar);
 
-        db = FirebaseFirestore.getInstance();
+        firebaseHelper = new FirebaseHelper();
 
         btnGuardar.setOnClickListener(v -> guardarTrabajador());
 
@@ -51,23 +54,33 @@ public class AddWorkerFragment extends DialogFragment {
         String telefono = etTelefono.getText().toString();
         String nieNif = etNIE_NIF.getText().toString();
 
-        // Crear un mapa con los datos del trabajador
-        Map<String, Object> trabajador = new HashMap<>();
-        trabajador.put("nombre", nombre);
-        trabajador.put("apellidos", apellidos);
-        trabajador.put("email", email);
-        trabajador.put("telefono", telefono);
-        trabajador.put("nie_nif", nieNif);
+        // Crear un nuevo objeto Worker con los datos ingresados
+        Worker worker = new Worker(nombre, apellidos, email, telefono, nieNif);
 
-        // Agregar el trabajador a Firestore
-        db.collection("trabajadores").add(trabajador).addOnSuccessListener(documentReference -> {
-            // Éxito al guardar en Firestore
-            dismiss(); // Cerrar la ventana flotante
-        }).addOnFailureListener(e -> {
-            // Error al guardar en Firestore
-            // Acciones a realizar si la operación falla
-            String errorMessage = "Error al guardar el trabajador: " + e.getMessage();
-            Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();
+        // Agregar el trabajador utilizando FirebaseHelper
+        firebaseHelper.addWorker(worker, new FirebaseHelper.DataStatus() {
+            @Override
+            public void DataIsLoaded(List<?> data) {
+                // Éxito al guardar en Firestore
+                dismiss(); // Cerrar la ventana flotante
+                Toast.makeText(getContext(), "Trabajador guardado correctamente", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void DataIsInserted() {}
+
+            @Override
+            public void DataIsUpdated() {}
+
+            @Override
+            public void DataIsDeleted() {}
+
+            @Override
+            public void onError(String errorMessage) {
+                // Error al guardar en Firestore
+                Toast.makeText(getContext(), "Error al guardar el trabajador: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
         });
     }
 }
+
