@@ -16,10 +16,34 @@
         android:theme="@style/Theme.TimeTracker"
         tools:targetApi="31">
         <activity
-            android:name=".AddUserFragment"
+            android:name=".ContactTechSupportActivity"
             android:exported="false" />
         <activity
-            android:name=".AddUser"
+            android:name=".ContactCompanyActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Ayuda"
+            android:exported="false" />
+        <activity
+            android:name=".PoliticaPrivacidadActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AvisoLegalActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ProteccionDeDatosActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AnnotationsAdapter"
+            android:exported="false" />
+        <activity
+            android:name=".HistorialAnotacionesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AddAnotacionAdminActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AddWorkerFragment"
             android:exported="false" />
         <activity
             android:name=".PanellAdministrador"

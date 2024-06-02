@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.PopupMenu;
 import android.widget.Toast;
@@ -30,6 +31,7 @@ import java.util.Map;
 public class PanellAdministrador extends AppCompatActivity {
 
     private ImageButton ibAddUser, ibAddGroup, ibConfig, ibAyuda;
+    private Button btnClose;
     private CollectionReference workersCollection;
 
 
@@ -42,6 +44,7 @@ public class PanellAdministrador extends AppCompatActivity {
         ibConfig = findViewById(R.id.ibConfig);
         ibAddGroup = findViewById(R.id.ibAddGroup);
         ibAddUser = findViewById(R.id.ibAddUser);
+        btnClose = findViewById(R.id.close_button);
 
         ibAddUser.setOnClickListener(view -> {
             // Inflar el menú a partir del archivo XML
@@ -79,6 +82,9 @@ public class PanellAdministrador extends AppCompatActivity {
             // Código para abrir el menú de configuración del administrador
             abrirMenuConfiguracionAdmin();
         });
+
+        btnClose.setOnClickListener(v -> finish());
+
     }
 
     private void importWorkersFromJSON() {
@@ -125,7 +131,7 @@ public class PanellAdministrador extends AppCompatActivity {
 
     private void abrirActividadAyuda() {
         // Código para abrir la actividad de Ayuda
-        Intent intent = new Intent(PanellAdministrador.this, Ayuda.class);
+        Intent intent = new Intent(PanellAdministrador.this, AyudaAdmin.class);
         startActivity(intent);
     }
 
@@ -169,7 +175,7 @@ public class PanellAdministrador extends AppCompatActivity {
     }
 
     private void abrirActividadAnotaciones() {
-        Intent intent = new Intent(PanellAdministrador.this, Anotaciones.class);
+        Intent intent = new Intent(PanellAdministrador.this, AddAnotacionAdminActivity.class);
         startActivity(intent);
     }
 
@@ -186,7 +192,7 @@ public class PanellAdministrador extends AppCompatActivity {
     private void exportWorkersToJSON() {
         // Código para exportar datos a Firebase
         // Obtener referencia a la colección de "trabajadores" en Firestore
-        workersCollection = FirebaseFirestore.getInstance().collection("trabajadores");
+        workersCollection = FirebaseFirestore.getInstance().collection("workers");
 
         // Obtener todos los documentos de la colección
         workersCollection.get().addOnSuccessListener(querySnapshot -> {

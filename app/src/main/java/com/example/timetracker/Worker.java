@@ -12,11 +12,11 @@ public class Worker {
     private long checkInTime;  // Hora de entrada en milisegundos
     private long checkOutTime; // Hora de salida en milisegundos
     private double totalDailyHours; // Horas totales diarias
-    private boolean isSubAdmin; // Campo booleano para indicar si es subadministrador
+    private boolean isAdmin; // Campo booleano para indicar si es subadministrador
 
     // Constructor con todos los campos
     public Worker(String id, String name, String surname, String email, String phone, String city,
-                  long checkInTime, long checkOutTime, boolean isSubAdmin, String password, String nieNif) {
+                  long checkInTime, long checkOutTime, boolean isAdmin, String password, String nieNif) {
         this.id = id;
         this.name = name;
         this.surname = surname;
@@ -26,7 +26,7 @@ public class Worker {
         this.checkInTime = checkInTime;
         this.checkOutTime = checkOutTime;
         this.totalDailyHours = calculateTotalDailyHours(checkInTime, checkOutTime);
-        this.isSubAdmin = isSubAdmin;
+        this.isAdmin = isAdmin;
         this.password = password;
         this.nieNif = nieNif;
 
@@ -74,8 +74,8 @@ public class Worker {
     }
     public double getTotalDailyHours() { return totalDailyHours; }
     public void setTotalDailyHours(double totalDailyHours) { this.totalDailyHours = totalDailyHours; }
-    public boolean isSubAdmin() { return isSubAdmin; }
-    public void setSubAdmin(boolean subAdmin) { isSubAdmin = subAdmin; }
+    public boolean isAdmin() { return isAdmin; }
+    public void setAdmin(boolean admin) { isAdmin = admin; }
 
     // Método para calcular las horas totales diarias
     private double calculateTotalDailyHours(long checkInTime, long checkOutTime) {

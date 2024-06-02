@@ -14,4 +14,38 @@
     <string name="API">Documentacion de la API</string>
     <string name="addUser">Crear nuevo empleado</string>
     <string name="importarEmpleado">Importar empleado</string>
+    <string name="adminPanel">Panel del administrador</string>
+    <string name="close">Cerrar</string>
+    <string name="privacy_policy_title">Política de Privacidad</string>
+    <string name="privacy_policy_content">Introducción:\n
+        Bienvenido a TimeTracker. Nos comprometemos a proteger y respetar su privacidad. Esta política de privacidad explica cómo recopilamos, usamos y compartimos su información personal cuando utiliza nuestra aplicación.\n\n
+        Información que recopilamos:\n
+        Recopilamos información personal que usted nos proporciona directamente, como su nombre, dirección de correo electrónico, número de teléfono y cualquier otra información que elija proporcionarnos. También recopilamos información automáticamente a través de su uso de la aplicación, como su dirección IP, tipo de dispositivo y datos de uso.\n\n
+        Uso de su información:\n
+        Utilizamos su información personal para:\n
+        - Proporcionar y mejorar nuestra aplicación.\n
+        - Comunicarnos con usted.\n
+        - Cumplir con nuestras obligaciones legales.\n\n
+        Seguridad de su información:\n
+        Implementamos medidas de seguridad para proteger su información contra el acceso no autorizado, la alteración, la divulgación o la destrucción.\n\n
+        Actualizaciones de nuestra política de privacidad:\n
+        Podemos actualizar nuestra política de privacidad de vez en cuando. Le notificaremos cualquier cambio publicando la nueva política de privacidad en esta página.
+    </string>
+    <string name="legal_notice_title">Aviso Legal</string>
+    <string name="legal_notice_content">Introducción:\n
+        Bienvenido a TimeTracker. Este aviso legal establece las condiciones de uso de nuestra aplicación.\n\n
+        Uso del contenido:\n
+        El contenido de esta aplicación es solo para fines informativos. No garantizamos la exactitud, integridad o actualidad del contenido proporcionado en esta aplicación.\n\n
+        Responsabilidad:\n
+        Usted utiliza esta aplicación bajo su propio riesgo. No nos hacemos responsables de ningún daño directo, indirecto, incidental, especial, consecuente o punitivo que surja del uso o la imposibilidad de usar esta aplicación.\n\n
+        Modificaciones:\n
+        Nos reservamos el derecho de modificar, actualizar o eliminar cualquier parte de este aviso legal sin previo aviso.\n\n
+        Ley aplicable:\n
+        Este aviso legal se rige por las leyes del país donde operamos y cualquier disputa relacionada con este aviso legal estará sujeta a la jurisdicción exclusiva de los tribunales de ese país.
+    </string>
+    <string name="wiki_manual">Wiki / Manual</string>
+    <string name="contact">Contacto</string>
+    <string name="support">Soporte Técnico</string>
+    <string name="about">Acerca de</string>
+    <string name="wiki_manual_content">Contenido de la Wiki / Manual...</string>
 </resources>

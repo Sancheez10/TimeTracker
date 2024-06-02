@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/etTextoAnotacion"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Texto de la anotación"
+        android:inputType="textMultiLine" />
+
+    <Button
+        android:id="@+id/btnFechaHora"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Seleccionar fecha y hora" />
+
+    <TextView
+        android:id="@+id/tvFechaHora"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Fecha y hora seleccionada"
+        android:padding="8dp" />
+
+    <Button
+        android:id="@+id/btnAdjuntarArchivo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Adjuntar archivo" />
+
+    <Button
+        android:id="@+id/btnGuardarAnotacion"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Guardar anotación" />
+
+</LinearLayout>

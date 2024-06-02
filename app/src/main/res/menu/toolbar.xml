@@ -2,6 +2,12 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/action_Admin"
+        app:showAsAction="ifRoom"
+        android:icon="@drawable/admin_panel_icon"
+        android:title="@string/adminPanel" />
+
+    <item
         android:id="@+id/mis_cuentas"
         app:showAsAction="never"
         android:title="@string/mis_cuentas"/>

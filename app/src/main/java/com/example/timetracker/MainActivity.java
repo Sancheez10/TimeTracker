@@ -17,13 +17,17 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.Manifest;
 import android.widget.TextView;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -126,7 +130,81 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar, menu);
+
+        // Obtener la referencia al elemento del menú del panel de administrador
+        MenuItem adminMenuItem = menu.findItem(R.id.action_Admin);
+
+        // Obtener el UID del usuario actualmente autenticado
+        String currentUserUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        // Obtener la referencia al documento del usuario actual en Firestore
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference userRef = db.collection("workers").document(currentUserUid);
+
+        // Obtener los datos del documento del usuario actual
+        userRef.get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+                // Obtener el valor del campo "isAdmin" del documento
+                boolean isAdmin = documentSnapshot.getBoolean("isAdmin");
+
+                // Verificar si el usuario es administrador y mostrar u ocultar la opción del panel de administrador
+                if (isAdmin) {
+                    adminMenuItem.setVisible(true);
+                } else {
+                    adminMenuItem.setVisible(false);
+                }
+            }
+        }).addOnFailureListener(e -> {
+            // Manejar cualquier error al obtener los datos del usuario
+        });
+
         return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.mis_cuentas) {
+            Intent intent = new Intent(this, Cuentas.class);
+            startActivity(intent);
+            return true;
+        }
+        else if (item.getItemId() == R.id.registro_laboral) {
+            Intent intent = new Intent(this, RegistroLaboral.class);
+            startActivity(intent);
+            return true;
+        } else if (item.getItemId() == R.id.anotaciones) {
+            Intent intent = new Intent(this, AddAnotacionActivity.class);
+            startActivity(intent);
+            return true;
+        } else if (item.getItemId() == R.id.calendario_laboral) {
+            Intent intent = new Intent(this, Calendario.class);
+            startActivity(intent);
+            return true;
+        } else if (item.getItemId() == R.id.horarios) {
+            Intent intent = new Intent(this, Horarios.class);
+            startActivity(intent);
+            return true;
+        } else if (item.getItemId() == R.id.configuracion) {
+            Intent intent = new Intent(this, Configuracion.class);
+            startActivity(intent);
+            return true;
+        } else if (item.getItemId() == R.id.ayuda) {
+            Intent intent = new Intent(this, Ayuda.class);
+            startActivity(intent);
+            return true;
+        } else if (item.getItemId() == R.id.proteccion_de_datos) {
+            Intent intent = new Intent(this, ProteccionDeDatosActivity.class);
+            startActivity(intent);
+            return true;
+        } else if (item.getItemId() == R.id.action_Admin) {
+            Intent intent = new Intent(this, PanellAdministrador.class);
+            startActivity(intent);
+            return true;
+        } else {
+            // If we got here, the user's action was not recognized.
+            // Invoke the superclass to handle it.
+            return super.onOptionsItemSelected(item);
+        }
     }
 
     public void bClickUbication(View v) {
