@@ -50,16 +50,6 @@
             android:layout_marginBottom="8dp"/>
 
         <Button
-            android:id="@+id/btn_support"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Soporte Técnico"
-            android:drawableStart="@drawable/ic_support"
-            android:drawablePadding="10dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"/>
-
-        <Button
             android:id="@+id/btn_about"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

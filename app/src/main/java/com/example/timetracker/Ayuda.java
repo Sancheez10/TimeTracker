@@ -3,12 +3,10 @@ package com.example.timetracker;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
 
 import android.content.Intent;
-import android.view.View;
 import androidx.appcompat.widget.Toolbar;
 
 public class Ayuda extends AppCompatActivity {
@@ -22,31 +20,15 @@ public class Ayuda extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("Ayuda");
 
-        findViewById(R.id.btn_wiki_manual).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Abre la Wikipedia en el navegador
-                String url = "https://es.wikipedia.org/wiki/Control_horario";
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(url));
-                startActivity(intent);
-            }
+        findViewById(R.id.btn_wiki_manual).setOnClickListener(v -> {
+            // Abre la Wikipedia en el navegador
+            String url = "https://es.wikipedia.org/wiki/Control_horario";
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse(url));
+            startActivity(intent);
         });
 
-        findViewById(R.id.btn_contact).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showContactOptions();
-            }
-        });
-
-        findViewById(R.id.btn_support).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Ayuda.this, SupportActivity.class);
-                startActivity(intent);
-            }
-        });
+        findViewById(R.id.btn_contact).setOnClickListener(v -> showContactOptions());
 
         findViewById(R.id.btn_about).setOnClickListener(v -> {
             Intent intent = new Intent(Ayuda.this, AboutActivity.class);

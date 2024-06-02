@@ -1,5 +1,7 @@
 package com.example.timetracker;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -32,8 +34,7 @@ public class ContactCompanyActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String title = etTitle.getText().toString();
                 String message = etMessage.getText().toString();
-                // Aquí puedes manejar el envío del mensaje, por ejemplo, enviándolo a un servidor o a un correo electrónico
-                Toast.makeText(ContactCompanyActivity.this, "Mensaje enviado:\n" + title + "\n" + message, Toast.LENGTH_SHORT).show();
+                sendEmail("tu_correo_empresa@ejemplo.com", title, message);
             }
         });
 
@@ -43,5 +44,17 @@ public class ContactCompanyActivity extends AppCompatActivity {
                 finish();
             }
         });
+    }
+
+    private void sendEmail(String to, String subject, String message) {
+        Intent emailIntent = new Intent(Intent.ACTION_SENDTO, Uri.fromParts(
+                "mailto", to, null));
+        emailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
+        emailIntent.putExtra(Intent.EXTRA_TEXT, message);
+        try {
+            startActivity(Intent.createChooser(emailIntent, "Enviar correo..."));
+        } catch (android.content.ActivityNotFoundException ex) {
+            Toast.makeText(ContactCompanyActivity.this, "No hay clientes de correo instalados.", Toast.LENGTH_SHORT).show();
+        }
     }
 }
