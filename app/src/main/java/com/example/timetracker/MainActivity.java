@@ -185,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
             return true;
         } else if (item.getItemId() == R.id.configuracion) {
-            Intent intent = new Intent(this, Configuracion.class);
+            Intent intent = new Intent(this, ConfiguracionActivity.class);
             startActivity(intent);
             return true;
         } else if (item.getItemId() == R.id.ayuda) {
