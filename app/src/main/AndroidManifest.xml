@@ -34,13 +34,13 @@
             android:name=".Ayuda"
             android:exported="false" />
         <activity
-            android:name=".PoliticaPrivacidadActivity"
-            android:exported="false" />
-        <activity
-            android:name=".AvisoLegalActivity"
-            android:exported="false" />
-        <activity
             android:name=".ProteccionDeDatosActivity"
+            android:exported="false" />
+        <activity
+            android:name=".PrivacyPolicyActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LegalNoticeActivity"
             android:exported="false" />
         <activity
             android:name=".AnnotationsAdapter"
