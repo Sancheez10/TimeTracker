@@ -131,35 +131,33 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar, menu);
 
-        // Obtener la referencia al elemento del menú del panel de administrador
         MenuItem adminMenuItem = menu.findItem(R.id.action_Admin);
 
-        // Obtener el UID del usuario actualmente autenticado
-        String currentUserUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            String currentUserUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            DocumentReference userRef = db.collection("workers").document(currentUserUid);
 
-        // Obtener la referencia al documento del usuario actual en Firestore
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        DocumentReference userRef = db.collection("workers").document(currentUserUid);
+            userRef.get().addOnSuccessListener(documentSnapshot -> {
+                if (documentSnapshot.exists()) {
+                    boolean isAdmin = documentSnapshot.getBoolean("isAdmin");
 
-        // Obtener los datos del documento del usuario actual
-        userRef.get().addOnSuccessListener(documentSnapshot -> {
-            if (documentSnapshot.exists()) {
-                // Obtener el valor del campo "isAdmin" del documento
-                boolean isAdmin = documentSnapshot.getBoolean("isAdmin");
-
-                // Verificar si el usuario es administrador y mostrar u ocultar la opción del panel de administrador
-                if (isAdmin) {
-                    adminMenuItem.setVisible(true);
-                } else {
-                    adminMenuItem.setVisible(false);
+                    if (isAdmin) {
+                        adminMenuItem.setVisible(true);
+                    } else {
+                        adminMenuItem.setVisible(false);
+                    }
                 }
-            }
-        }).addOnFailureListener(e -> {
-            // Manejar cualquier error al obtener los datos del usuario
-        });
+            }).addOnFailureListener(e -> {
+                // Manejar cualquier error al obtener los datos del usuario
+            });
+        } else {
+            adminMenuItem.setVisible(false);
+        }
 
         return true;
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
