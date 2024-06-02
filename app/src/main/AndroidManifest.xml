@@ -22,6 +22,9 @@
             android:name=".ConfiguracionActivity"
             android:exported="false" />
         <activity
+            android:name=".Calendario"
+            android:exported="false" />
+        <activity
             android:name=".AboutActivity"
             android:exported="false" />
         <activity

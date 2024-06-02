@@ -9,6 +9,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.LocationManager;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -29,8 +31,10 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
@@ -76,6 +80,9 @@ public class MainActivity extends AppCompatActivity {
 
         databaseRef = FirebaseDatabase.getInstance().getReference("Timer");
 
+        bWorkStatus.setVisibility(View.INVISIBLE);
+        checkLocationPermissionAndRequestUpdates();
+
         bWorkStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -84,7 +91,8 @@ public class MainActivity extends AppCompatActivity {
                     isWorking = true;
                     tvStatus.setText("Trabajando");
                     bWorkStatus.setText("Detener");
-                    saveEntryToDatabase(startTime);
+                    String address = ((TextView)findViewById(R.id.getLocationButton)).getText().toString(); // Obtener la dirección del TextView
+                    saveEntryToDatabase(startTime, address);
                     startTimer();
                 } else {
                     endTime = System.currentTimeMillis();
@@ -97,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
     }
 
     private void startTimer() {
@@ -216,15 +225,51 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void checkLocationPermissionAndRequestUpdates() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            // Si el permiso está concedido, comenzar a escuchar las actualizaciones de ubicación
+            checkLocationSettingsAndShowMessage();
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, new MyLocationListener());
+        } else {
+            // Si el permiso no está concedido, solicitarlo al usuario
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+        }
+    }
+
     private class MyLocationListener implements LocationListener {
         @Override
         public void onLocationChanged(Location location) {
             if (firstLocation == null) {
                 firstLocation = location;
-                double latitude = firstLocation.getLatitude();
-                double longitude = firstLocation.getLongitude();
-                TextView tvCoordinates = findViewById(R.id.getLocationButton);
-                tvCoordinates.setText("Ubicación: " + latitude + ", " + longitude);
+
+                // Obtener la dirección completa utilizando la geocodificación inversa
+                Geocoder geocoder = new Geocoder(MainActivity.this, Locale.getDefault());
+                try {
+                    double latitude = firstLocation.getLatitude();
+                    double longitude = firstLocation.getLongitude();
+                    List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
+                    if (addresses != null && addresses.size() > 0) {
+                        Address address = addresses.get(0);
+                        StringBuilder addressStringBuilder = new StringBuilder();
+
+                        // Construir la dirección completa a partir de los diferentes componentes
+                        for (int i = 0; i <= address.getMaxAddressLineIndex(); i++) {
+                            addressStringBuilder.append(address.getAddressLine(i)).append(", ");
+                        }
+
+                        String completeAddress = addressStringBuilder.toString();
+                        TextView tvCoordinates = findViewById(R.id.getLocationButton);
+                        tvCoordinates.setText("Ubicación: " + completeAddress);
+
+                        // Guardar la ubicación en la base de datos
+                        saveEntryToDatabase(System.currentTimeMillis(), completeAddress);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                // Mostrar el botón de iniciar trabajo si la ubicación se obtiene correctamente
+                bWorkStatus.setVisibility(View.VISIBLE);
             }
         }
 
@@ -269,7 +314,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void saveEntryToDatabase(long entryTime) {
+    private void saveEntryToDatabase(long entryTime, String address) {
         String userId = sharedPreferences.getString("userId", "");
         String entryTimeStr = formatTime(entryTime);
 
@@ -278,6 +323,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Guardar la hora de entrada del usuario
         userRef.child("entry_time").setValue(entryTimeStr);
+        userRef.child("entry_address").setValue(address);
     }
 
 
