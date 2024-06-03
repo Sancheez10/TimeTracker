@@ -12,22 +12,24 @@
         android:elevation="4dp"
         android:theme="?attr/actionBarTheme" />
 
-    <!-- RecyclerView para mostrar los horarios -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewHorarios"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+    <!-- TextView para mostrar los horarios -->
+    <TextView
+        android:id="@+id/textViewHorarios"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_below="@id/toolbar"
-        android:padding="16dp" />
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:textSize="18sp" />
 
     <!-- Botón para cerrar la actividad -->
     <Button
         android:id="@+id/close_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+        android:layout_below="@id/textViewHorarios"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="20dp"
+        android:layout_marginTop="16dp"
         android:text="Cerrar" />
 
 </RelativeLayout>

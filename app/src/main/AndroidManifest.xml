@@ -22,6 +22,12 @@
             android:name=".ConfiguracionActivity"
             android:exported="false" />
         <activity
+            android:name=".AddAnotacionActivity"
+            android:exported="false" />
+        <activity
+            android:name=".HistorialAnotacionesActivity"
+            android:exported="false" />
+        <activity
             android:name=".Calendario"
             android:exported="false" />
         <activity
@@ -48,9 +54,12 @@
         <activity
             android:name=".AnnotationsAdapter"
             android:exported="false" />
-        <activity
-            android:name=".HistorialAnotacionesActivity"
-            android:exported="false" />
+        <activity android:name=".NombrarSubadmin"></activity>
+        <activity android:name=".DispositivosRestricciones"></activity>
+        <activity android:name=".Etiquetas"></activity>
+        <activity android:name=".Cuentas"></activity>
+        <activity android:name=".Horarios"></activity>
+
         <activity
             android:name=".AddAnotacionAdminActivity"
             android:exported="false" />

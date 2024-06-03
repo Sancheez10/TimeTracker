@@ -29,10 +29,10 @@ public class HorariosActivity extends AppCompatActivity {
 
         db = FirebaseFirestore.getInstance();
 
-        RecyclerView recyclerView = findViewById(R.id.recyclerViewHorarios);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+     //   RecyclerView recyclerView = findViewById(R.id.recyclerViewHorarios);
+       // recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        loadHorarios(recyclerView);
+        //loadHorarios(recyclerView);
     }
 
     private void loadHorarios(RecyclerView recyclerView) {

@@ -1,13 +1,16 @@
 package com.example.timetracker;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
@@ -33,18 +36,45 @@ public class PanellAdministrador extends AppCompatActivity {
     private ImageButton ibAddUser, ibAddGroup, ibConfig, ibAyuda;
     private Button btnClose;
     private CollectionReference workersCollection;
-
+    private Toolbar toolbar_panell;
+    private ListView workerListView;
+    private List<String> workerNames;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_panell_administrador);
 
+        toolbar_panell = findViewById(R.id.toolbar2);
+        setSupportActionBar(toolbar_panell);
+
         ibAyuda = findViewById(R.id.ibAyuda);
         ibConfig = findViewById(R.id.ibConfig);
         ibAddGroup = findViewById(R.id.ibAddGroup);
         ibAddUser = findViewById(R.id.ibAddUser);
         btnClose = findViewById(R.id.close_button);
+        workerListView = findViewById(R.id.workerListView);
+
+        workerNames = new ArrayList<>();
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, workerNames);
+        workerListView.setAdapter(adapter);
+
+        // Inicializar la colección de trabajadores en Firestore
+        workersCollection = FirebaseFirestore.getInstance().collection("workers");
+
+        // Obtener los trabajadores de Firestore y actualizar el ListView
+        workersCollection.get().addOnSuccessListener(querySnapshot -> {
+            for (DocumentSnapshot document : querySnapshot.getDocuments()) {
+                Map<String, Object> workerData = document.getData();
+                if (workerData != null && workerData.containsKey("name")) {
+                    workerNames.add(workerData.get("name").toString());
+                }
+            }
+            adapter.notifyDataSetChanged();
+        }).addOnFailureListener(e -> {
+            Log.e("FIRESTORE", "Error al obtener trabajadores", e);
+            Toast.makeText(this, "Error al obtener trabajadores", Toast.LENGTH_SHORT).show();
+        });
 
         ibAddUser.setOnClickListener(view -> {
             // Inflar el menú a partir del archivo XML
@@ -75,7 +105,7 @@ public class PanellAdministrador extends AppCompatActivity {
 
         ibAyuda.setOnClickListener(view -> {
             // Código para abrir la actividad de Ayuda
-            abrirActividadAyuda();
+            abrirDialogoAyuda();
         });
 
         ibConfig.setOnClickListener(view -> {
@@ -84,7 +114,6 @@ public class PanellAdministrador extends AppCompatActivity {
         });
 
         btnClose.setOnClickListener(v -> finish());
-
     }
 
     private void importWorkersFromJSON() {
@@ -129,10 +158,9 @@ public class PanellAdministrador extends AppCompatActivity {
         addGroupFragment.show(getSupportFragmentManager(), "add_group_fragment");
     }
 
-    private void abrirActividadAyuda() {
-        // Código para abrir la actividad de Ayuda
-        Intent intent = new Intent(PanellAdministrador.this, AyudaAdmin.class);
-        startActivity(intent);
+    private void abrirDialogoAyuda() {
+        AyudaAdmin ayudaAdmin = new AyudaAdmin();
+        ayudaAdmin.show(getSupportFragmentManager(), "ayuda_admin_dialog");
     }
 
     private void abrirMenuConfiguracionAdmin() {

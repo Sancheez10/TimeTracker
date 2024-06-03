@@ -5,6 +5,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -24,6 +25,9 @@ public class HistorialAnotacionesActivity extends AppCompatActivity implements A
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_historial_anotaciones);
 
+        Toolbar toolbar = findViewById(R.id.toolbar5);
+        setSupportActionBar(toolbar);
+
         lvAnotaciones = findViewById(R.id.lvAnotaciones);
         db = FirebaseFirestore.getInstance();
         anotaciones = new ArrayList<>();
@@ -31,10 +35,15 @@ public class HistorialAnotacionesActivity extends AppCompatActivity implements A
         adapter = new AnnotationsAdapter(this, R.layout.item_anotacion, anotaciones, this);
         lvAnotaciones.setAdapter(adapter);
 
+        cargarAnotaciones();
+    }
+
+    private void cargarAnotaciones() {
         db.collection("anotaciones").get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 for (QueryDocumentSnapshot document : task.getResult()) {
                     Anotacion anotacion = document.toObject(Anotacion.class);
+                    anotacion.setId(document.getId());
                     anotaciones.add(anotacion);
                 }
                 adapter.notifyDataSetChanged();
@@ -57,3 +66,5 @@ public class HistorialAnotacionesActivity extends AppCompatActivity implements A
         });
     }
 }
+
+
