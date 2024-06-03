@@ -79,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
         checkLocationSettings();
 
         databaseRef = FirebaseDatabase.getInstance().getReference("Timer");
+        tvTimer.setText("00:00:00");
 
         bWorkStatus.setVisibility(View.INVISIBLE);
         checkLocationPermissionAndRequestUpdates();
