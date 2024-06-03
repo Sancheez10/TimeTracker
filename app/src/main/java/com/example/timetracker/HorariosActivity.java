@@ -15,6 +15,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class HorariosActivity extends AppCompatActivity {
 
@@ -48,7 +49,7 @@ public class HorariosActivity extends AppCompatActivity {
                                 String salida = document.getString("salida");
                                 horarioList.add(new Horario(workerId, entrada, salida));
                             }
-                            HorarioAdapter adapter = new HorarioAdapter(horarioList);
+                            HorariosAdapter adapter = new HorariosAdapter(horarioList);
                             recyclerView.setAdapter(adapter);
                         } else {
                             Log.w(TAG, "Error getting documents.", task.getException());
