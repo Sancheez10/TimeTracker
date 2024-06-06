@@ -1,3 +1,4 @@
+// HistorialAnotacionesActivity.java
 package com.example.timetracker;
 
 import android.os.Bundle;
@@ -7,6 +8,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -19,6 +22,7 @@ public class HistorialAnotacionesActivity extends AppCompatActivity implements A
     private FirebaseFirestore db;
     private List<Anotacion> anotaciones;
     private AnnotationsAdapter adapter;
+    private FirebaseUser currentUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +35,7 @@ public class HistorialAnotacionesActivity extends AppCompatActivity implements A
         lvAnotaciones = findViewById(R.id.lvAnotaciones);
         db = FirebaseFirestore.getInstance();
         anotaciones = new ArrayList<>();
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
         adapter = new AnnotationsAdapter(this, R.layout.item_anotacion, anotaciones, this);
         lvAnotaciones.setAdapter(adapter);
@@ -39,23 +44,31 @@ public class HistorialAnotacionesActivity extends AppCompatActivity implements A
     }
 
     private void cargarAnotaciones() {
-        db.collection("anotaciones").get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                for (QueryDocumentSnapshot document : task.getResult()) {
-                    Anotacion anotacion = document.toObject(Anotacion.class);
-                    anotacion.setId(document.getId());
-                    anotaciones.add(anotacion);
-                }
-                adapter.notifyDataSetChanged();
-            } else {
-                Toast.makeText(HistorialAnotacionesActivity.this, "Error al obtener las anotaciones", Toast.LENGTH_SHORT).show();
-            }
-        });
+        if (currentUser != null) {
+            db.collection("anotaciones_users")
+                    .document(currentUser.getUid())
+                    .collection("anotaciones")
+                    .get()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                Anotacion anotacion = document.toObject(Anotacion.class);
+                                anotacion.setId(document.getId());
+                                anotaciones.add(anotacion);
+                            }
+                            adapter.notifyDataSetChanged();
+                        } else {
+                            Toast.makeText(HistorialAnotacionesActivity.this, "Error al obtener las anotaciones", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        } else {
+            Toast.makeText(HistorialAnotacionesActivity.this, "No se ha iniciado sesión", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
     public void onDeleteClick(Anotacion anotacion) {
-        db.collection("anotaciones").document(anotacion.getId()).delete().addOnCompleteListener(task -> {
+        db.collection("anotaciones_users").document(currentUser.getUid()).collection("anotaciones").document(anotacion.getId()).delete().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 Toast.makeText(HistorialAnotacionesActivity.this, "Anotación eliminada", Toast.LENGTH_SHORT).show();
                 anotaciones.remove(anotacion);
@@ -66,5 +79,3 @@ public class HistorialAnotacionesActivity extends AppCompatActivity implements A
         });
     }
 }
-
-

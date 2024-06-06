@@ -21,6 +21,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -128,8 +130,8 @@ public class AuthActivity extends AppCompatActivity {
     }
 
     private String hashPassword(String password) {
-        // Implementa aquí tu lógica de hash
-        return password;  // Reemplaza esto con el hash real
+        // Hashear la contraseña usando BCrypt
+        return BCrypt.hashpw(password, BCrypt.gensalt());
     }
 
     private void saveUserData(String userId, String email, String password) {
@@ -148,7 +150,6 @@ public class AuthActivity extends AppCompatActivity {
                     }
                 });
     }
-
 
     private void saveUserDataInPreferences(String userId, String email) {
         SharedPreferences.Editor editor = sharedPreferences.edit();

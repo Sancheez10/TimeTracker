@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
         // Inicializar SharedPreferences
-        sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences("workers_pref", Context.MODE_PRIVATE);
 
         // Obtener el correo electrónico del usuario desde SharedPreferences
         String email = sharedPreferences.getString("email", "Usuario");

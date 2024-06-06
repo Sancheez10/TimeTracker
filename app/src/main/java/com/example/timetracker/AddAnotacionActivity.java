@@ -10,15 +10,21 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AddAnotacionActivity extends AppCompatActivity {
 
     private EditText etAnotacion;
     private Button bEnviar, bHistorial;
     private FirebaseFirestore db;
+    private FirebaseAuth firebaseAuth;
+    private FirebaseUser currentUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,17 +39,32 @@ public class AddAnotacionActivity extends AppCompatActivity {
         bHistorial = findViewById(R.id.bHistorial);
 
         db = FirebaseFirestore.getInstance();
+        firebaseAuth = FirebaseAuth.getInstance();
+        currentUser = firebaseAuth.getCurrentUser();
     }
 
     public void enviarAnotacion(View view) {
         String textoAnotacion = etAnotacion.getText().toString();
-        if (!textoAnotacion.isEmpty()) {
-            String anotacionId = db.collection("anotaciones").document().getId();
-            Date fechaHoraActual = new Date();
-            Anotacion anotacion = new Anotacion(anotacionId, textoAnotacion, fechaHoraActual, null, null);
+        if (!textoAnotacion.isEmpty() && currentUser != null) {
+            String userId = currentUser.getUid();
+            String anotacionId = db.collection("anotaciones_users")
+                    .document(userId)
+                    .collection("anotaciones")
+                    .document().getId();
 
-            db.collection("anotaciones").document(anotacionId)
-                    .set(anotacion)
+            Date fechaHoraActual = new Date();
+            String createdBy = currentUser.getEmail();
+
+            Map<String, Object> anotacionData = new HashMap<>();
+            anotacionData.put("texto", textoAnotacion);
+            anotacionData.put("fechaHora", fechaHoraActual);
+            anotacionData.put("createdBy", createdBy);
+
+            db.collection("anotaciones_users")
+                    .document(userId)
+                    .collection("anotaciones")
+                    .document(anotacionId)
+                    .set(anotacionData)
                     .addOnSuccessListener(documentReference -> {
                         Toast.makeText(AddAnotacionActivity.this, "Anotación guardada", Toast.LENGTH_SHORT).show();
                     })

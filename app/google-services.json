@@ -5,8 +5,7 @@
     "project_id": "timetracker-dani",
     "storage_bucket": "timetracker-dani.appspot.com"
   },
-  "client":
-
+  "client": [
     {
       "client_info": {
         "mobilesdk_app_id": "1:519378957895:android:e0f94eaa22aa5a6090a362",
