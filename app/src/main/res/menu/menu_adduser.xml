@@ -4,6 +4,6 @@
         android:id="@+id/action_addUser"
         android:title="@string/addUser" />
     <item
-        android:id="@+id/action_importUserFromJSON"
+        android:id="@+id/action_importUserFromCSV"
         android:title="@string/importarEmpleado" />
 </menu>

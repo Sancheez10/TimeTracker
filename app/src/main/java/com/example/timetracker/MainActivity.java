@@ -208,11 +208,22 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(this, PanellAdministrador.class);
             startActivity(intent);
             return true;
+        } else if (item.getItemId() == R.id.action_logout) {
+            logout();
+            return true;
         } else {
             // If we got here, the user's action was not recognized.
             // Invoke the superclass to handle it.
             return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void logout() {
+        FirebaseAuth.getInstance().signOut();
+        Intent intent = new Intent(MainActivity.this, AuthActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();
     }
 
     public void bClickUbication(View v) {
