@@ -48,4 +48,5 @@
     <string name="support">Soporte Técnico</string>
     <string name="about">Acerca de</string>
     <string name="wiki_manual_content">Contenido de la Wiki / Manual...</string>
+    <string name="cerrar_sesion">Cerrar sesion</string>
 </resources>

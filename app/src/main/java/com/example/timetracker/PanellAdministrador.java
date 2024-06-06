@@ -20,6 +20,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -27,7 +29,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -84,8 +89,8 @@ public class PanellAdministrador extends AppCompatActivity {
             // Configurar los listeners para las opciones del menú
             popupMenu.setOnMenuItemClickListener(item -> {
                 // Manejar la selección de la opción del menú
-                if (item.getItemId() == R.id.action_importUserFromJSON) {
-                    importWorkersFromJSON();
+                if (item.getItemId() == R.id.action_importUserFromCSV) {
+                    importWorkersFromCSV(); // Actualizado para importar desde CSV
                     return true;
                 } else if (item.getItemId() == R.id.action_addUser) {
                     abrirVentanaFlotanteAddWorker();
@@ -116,33 +121,59 @@ public class PanellAdministrador extends AppCompatActivity {
         btnClose.setOnClickListener(v -> finish());
     }
 
-    private void importWorkersFromJSON() {
-        // Código para importar trabajadores desde JSON
-        // Leer el archivo JSON desde el almacenamiento externo
+    private void importWorkersFromCSV() {
+        // Código para importar trabajadores desde CSV
         try {
-            File file = new File(getExternalFilesDir(null), "workers.json");
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
-            StringBuilder stringBuilder = new StringBuilder();
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                stringBuilder.append(line);
-            }
-            bufferedReader.close();
+            File file = new File(getExternalFilesDir(null), "workers.csv");
+            CSVReader reader = new CSVReader(new FileReader(file));
+            String[] nextLine;
+            while ((nextLine = reader.readNext()) != null) {
+                // Suponiendo que el CSV tiene los campos: id, name, surname, email, phone, city, isAdmin, password, nieNif
+                Map<String, Object> worker = new HashMap<>();
+                worker.put("id", nextLine[0]);
+                worker.put("name", nextLine[1]);
+                worker.put("surname", nextLine[2]);
+                worker.put("email", nextLine[3]);
+                worker.put("phone", nextLine[4]);
+                worker.put("city", nextLine[5]);
+                worker.put("isAdmin", Boolean.parseBoolean(nextLine[6]));
+                worker.put("password", hashPassword(nextLine[7])); // Hashed password
+                worker.put("nieNif", nextLine[8]);
 
-            // Convertir el JSON a una lista de trabajadores
-            Gson gson = new Gson();
-            Type type = new TypeToken<List<Map<String, Object>>>() {
-            }.getType();
-            List<Map<String, Object>> workersList = gson.fromJson(stringBuilder.toString(), type);
-
-            // Guardar los trabajadores en Firestore
-            for (Map<String, Object> worker : workersList) {
-                workersCollection.add(worker).addOnSuccessListener(documentReference -> Log.d("IMPORT", "Trabajador importado exitosamente")).addOnFailureListener(e -> Log.e("IMPORT", "Error al importar trabajador", e));
+                workersCollection.add(worker).addOnSuccessListener(documentReference ->
+                        Log.d("IMPORT", "Trabajador importado exitosamente")
+                ).addOnFailureListener(e ->
+                        Log.e("IMPORT", "Error al importar trabajador", e)
+                );
             }
+            reader.close();
             Toast.makeText(this, "Trabajadores importados correctamente", Toast.LENGTH_SHORT).show();
         } catch (IOException e) {
             e.printStackTrace();
-            Toast.makeText(this, "Error al importar trabajadores desde JSON", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Error al importar trabajadores desde CSV", Toast.LENGTH_SHORT).show();
+        } catch (CsvValidationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String hashPassword(String password) {
+        try {
+            // Crear una instancia de MessageDigest con el algoritmo SHA-256
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+
+            // Aplicar el hash a la contraseña
+            byte[] encodedHash = digest.digest(password.getBytes());
+
+            // Convertir el byte array a un string hexadecimal
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : encodedHash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Error al generar el hash de la contraseña", e);
         }
     }
 

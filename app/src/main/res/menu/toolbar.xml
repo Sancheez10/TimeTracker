@@ -39,5 +39,10 @@
         android:id="@+id/proteccion_de_datos"
         app:showAsAction="never"
         android:title="@string/proteccion_de_datos" />
+    <item
+        android:id="@+id/action_logout"
+        android:title="@string/cerrar_sesion"
+        android:orderInCategory="100"
+        app:showAsAction="never" />
 
 </menu>
