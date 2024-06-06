@@ -87,23 +87,7 @@ public class MainActivity extends AppCompatActivity {
         bWorkStatus.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!isWorking) {
-                    startTime = System.currentTimeMillis();
-                    isWorking = true;
-                    tvStatus.setText("Trabajando");
-                    bWorkStatus.setText("Detener");
-                    String address = ((TextView)findViewById(R.id.getLocationButton)).getText().toString(); // Obtener la dirección del TextView
-                    saveEntryToDatabase(startTime, address);
-                    startTimer();
-                } else {
-                    endTime = System.currentTimeMillis();
-                    isWorking = false;
-                    tvStatus.setText("Parado");
-                    bWorkStatus.setText("Iniciar");
-                    saveExitToDatabase(endTime);
-                    stopTimer();
-                    calculateAndDisplayTotalTime();
-                }
+                bClickWorkButton(v); // Llama al método bClickWorkButton en el clic del botón
             }
         });
 
@@ -111,6 +95,26 @@ public class MainActivity extends AppCompatActivity {
 
     private void startTimer() {
         handler.postDelayed(timerRunnable, 1000); // Actualizar cada segundo
+    }
+
+    public void bClickWorkButton(View view) {
+        if (!isWorking) {
+            startTime = System.currentTimeMillis();
+            isWorking = true;
+            tvStatus.setText("Trabajando");
+            bWorkStatus.setText("Detener");
+            String address = ((TextView)findViewById(R.id.getLocationButton)).getText().toString(); // Obtener la dirección del TextView
+            saveEntryToDatabase(startTime, address);
+            startTimer();
+        } else {
+            endTime = System.currentTimeMillis();
+            isWorking = false;
+            tvStatus.setText("Parado");
+            bWorkStatus.setText("Iniciar");
+            saveExitToDatabase(endTime);
+            stopTimer();
+            calculateAndDisplayTotalTime();
+        }
     }
 
     // Método para detener el contador
