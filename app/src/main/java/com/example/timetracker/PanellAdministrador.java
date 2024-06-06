@@ -45,6 +45,9 @@ public class PanellAdministrador extends AppCompatActivity {
     private ListView workerListView;
     private List<String> workerNames;
 
+    private List<Worker> workerList = new ArrayList<>();
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,19 +70,24 @@ public class PanellAdministrador extends AppCompatActivity {
         // Inicializar la colección de trabajadores en Firestore
         workersCollection = FirebaseFirestore.getInstance().collection("workers");
 
-        // Obtener los trabajadores de Firestore y actualizar el ListView
-        workersCollection.get().addOnSuccessListener(querySnapshot -> {
-            for (DocumentSnapshot document : querySnapshot.getDocuments()) {
-                Map<String, Object> workerData = document.getData();
-                if (workerData != null && workerData.containsKey("name")) {
-                    workerNames.add(workerData.get("name").toString());
+
+        workersCollection.get().addOnSuccessListener(queryDocumentSnapshots -> {
+            for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                Log.d("AAAAAA", "docuement" + document);
+                Worker worker = document.toObject(Worker.class);
+                if (worker != null) {
+                    workerList.add(worker);
+                    // Agregar el nombre del trabajador a la lista workerNames
+                    workerNames.add(worker.getName()); // Suponiendo que el objeto Worker tiene un método getName() que devuelve el nombre
                 }
             }
-            adapter.notifyDataSetChanged();
+            adapter.notifyDataSetChanged(); // Notificar al adaptador que los datos han cambiado
         }).addOnFailureListener(e -> {
-            Log.e("FIRESTORE", "Error al obtener trabajadores", e);
-            Toast.makeText(this, "Error al obtener trabajadores", Toast.LENGTH_SHORT).show();
+            // Manejar el error
         });
+
+
+
 
         ibAddUser.setOnClickListener(view -> {
             // Inflar el menú a partir del archivo XML
