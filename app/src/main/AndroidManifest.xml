@@ -16,6 +16,9 @@
         android:theme="@style/Theme.TimeTracker"
         tools:targetApi="31">
         <activity
+            android:name=".WorkerListActivity"
+            android:exported="false" />
+        <activity
             android:name=".HorariosActivity"
             android:exported="false" />
         <activity
@@ -54,12 +57,11 @@
         <activity
             android:name=".AnnotationsAdapter"
             android:exported="false" />
-        <activity android:name=".NombrarSubadmin"></activity>
-        <activity android:name=".DispositivosRestricciones"></activity>
-        <activity android:name=".Etiquetas"></activity>
-        <activity android:name=".Cuentas"></activity>
-        <activity android:name=".Horarios"></activity>
-
+        <activity android:name=".NombrarSubadmin" />
+        <activity android:name=".DispositivosRestricciones" />
+        <activity android:name=".Etiquetas" />
+        <activity android:name=".Cuentas" />
+        <activity android:name=".Horarios" />
         <activity
             android:name=".AddAnotacionAdminActivity"
             android:exported="false" />

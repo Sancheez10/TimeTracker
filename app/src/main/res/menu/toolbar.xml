@@ -28,6 +28,10 @@
         app:showAsAction="never"
         android:title="@string/horarios" />
     <item
+        android:id="@+id/action_worker_list"
+        android:title="Lista de Trabajadores"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/configuracion"
         app:showAsAction="never"
         android:title="Configuración" />
@@ -42,7 +46,6 @@
     <item
         android:id="@+id/action_logout"
         android:title="@string/cerrar_sesion"
-        android:orderInCategory="100"
         app:showAsAction="never" />
 
 </menu>

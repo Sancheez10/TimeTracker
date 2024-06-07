@@ -215,6 +215,10 @@ public class MainActivity extends AppCompatActivity {
         } else if (item.getItemId() == R.id.action_logout) {
             logout();
             return true;
+        } else if (item.getItemId() == R.id.action_worker_list) {
+            Intent intent = new Intent(this, WorkerListActivity.class);
+            startActivity(intent);
+            return true;
         } else {
             // If we got here, the user's action was not recognized.
             // Invoke the superclass to handle it.
