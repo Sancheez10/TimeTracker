@@ -28,6 +28,9 @@
             android:name=".AddAnotacionActivity"
             android:exported="false" />
         <activity
+            android:name=".RegistroLaboral"
+            android:exported="false" />
+        <activity
             android:name=".HistorialAnotacionesActivity"
             android:exported="false" />
         <activity
