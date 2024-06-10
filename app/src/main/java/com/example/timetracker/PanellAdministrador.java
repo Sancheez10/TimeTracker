@@ -1,16 +1,19 @@
 package com.example.timetracker;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 
+import android.Manifest;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
@@ -19,22 +22,22 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Type;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class PanellAdministrador extends AppCompatActivity {
 
@@ -42,11 +45,16 @@ public class PanellAdministrador extends AppCompatActivity {
     private Button btnClose;
     private CollectionReference workersCollection;
     private Toolbar toolbar_panell;
-    private ListView workerListView;
-    private List<String> workerNames;
 
-    private List<Worker> workerList = new ArrayList<>();
+    private static final int REQUEST_CODE_PERMISSION = 123;
+    private static final int REQUEST_CODE_CSV_FILE = 456;
 
+    private ActivityResultLauncher<String> csvFileLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(),
+            uri -> {
+                if (uri != null) {
+                    processCSVFile(uri);
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,33 +69,8 @@ public class PanellAdministrador extends AppCompatActivity {
         ibAddGroup = findViewById(R.id.ibAddGroup);
         ibAddUser = findViewById(R.id.ibAddUser);
         btnClose = findViewById(R.id.close_button);
-        workerListView = findViewById(R.id.workerListView);
 
-        workerNames = new ArrayList<>();
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, workerNames);
-        workerListView.setAdapter(adapter);
-
-        // Inicializar la colección de trabajadores en Firestore
         workersCollection = FirebaseFirestore.getInstance().collection("workers");
-
-
-        workersCollection.get().addOnSuccessListener(queryDocumentSnapshots -> {
-            for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
-                Log.d("AAAAAA", "docuement" + document);
-                Worker worker = document.toObject(Worker.class);
-                if (worker != null) {
-                    workerList.add(worker);
-                    // Agregar el nombre del trabajador a la lista workerNames
-                    workerNames.add(worker.getName()); // Suponiendo que el objeto Worker tiene un método getName() que devuelve el nombre
-                }
-            }
-            adapter.notifyDataSetChanged(); // Notificar al adaptador que los datos han cambiado
-        }).addOnFailureListener(e -> {
-            // Manejar el error
-        });
-
-
-
 
         ibAddUser.setOnClickListener(view -> {
             // Inflar el menú a partir del archivo XML
@@ -130,61 +113,80 @@ public class PanellAdministrador extends AppCompatActivity {
     }
 
     private void importWorkersFromCSV() {
-        // Código para importar trabajadores desde CSV
+        // Obtener referencia a la colección de "workers" en Firestore
+
+
+        // Solicitar permisos de lectura y escritura externa
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_PERMISSION);
+
+        // Lanzar el selector de archivos CSV
+        csvFileLauncher.launch("*/*");
+    }
+
+    private void processCSVFile(Uri uri) {
         try {
-            File file = new File(getExternalFilesDir(null), "workers.csv");
-            CSVReader reader = new CSVReader(new FileReader(file));
+            // Obtener el InputStream del archivo CSV a partir de la URI
+            InputStream inputStream = getContentResolver().openInputStream(uri);
+
+            // Inicializar un lector CSV
+            CSVReader reader = new CSVReader(new InputStreamReader(inputStream));
+
+            // Leer las líneas del archivo CSV
             String[] nextLine;
             while ((nextLine = reader.readNext()) != null) {
-                // Suponiendo que el CSV tiene los campos: id, name, surname, email, phone, city, isAdmin, password, nieNif
-                Map<String, Object> worker = new HashMap<>();
-                worker.put("id", nextLine[0]);
-                worker.put("name", nextLine[1]);
-                worker.put("surname", nextLine[2]);
-                worker.put("email", nextLine[3]);
-                worker.put("phone", nextLine[4]);
-                worker.put("city", nextLine[5]);
-                worker.put("isAdmin", Boolean.parseBoolean(nextLine[6]));
-                worker.put("password", hashPassword(nextLine[7])); // Hashed password
-                worker.put("nieNif", nextLine[8]);
+                Log.d("CSV_IMPORT", "Línea leída del CSV: " + Arrays.toString(nextLine));
 
-                workersCollection.add(worker).addOnSuccessListener(documentReference ->
-                        Log.d("IMPORT", "Trabajador importado exitosamente")
-                ).addOnFailureListener(e ->
-                        Log.e("IMPORT", "Error al importar trabajador", e)
-                );
+                // Verificar si la línea tiene la estructura esperada
+                if (nextLine.length >= 3) {
+                    // Obtener los campos de la línea CSV
+                    String email = nextLine[0];
+                    String password = nextLine[1];
+                    String name = nextLine[2];
+
+                    // Generar un ID aleatorio para el trabajador
+                    String workerId = UUID.randomUUID().toString();
+
+                    // Crear un objeto Worker con los datos obtenidos
+                    Worker worker = new Worker(workerId, name,null , email, "", "", 0, 0, false, password, "");
+
+                    // Agregar el trabajador a la base de datos Firestore
+                    addWorkerToDatabase(worker);
+
+                    // Agregar registro de log
+                    Log.d("CSV_IMPORT", "Trabajador procesado: " + worker.getEmail());
+                } else {
+                    // Si la línea no tiene la estructura esperada, registrar un error
+                    Log.e("CSV_IMPORT", "Error: La línea CSV no tiene la estructura esperada");
+                }
             }
+
+            // Cerrar el lector CSV
             reader.close();
+
+            // Mostrar un mensaje de éxito
             Toast.makeText(this, "Trabajadores importados correctamente", Toast.LENGTH_SHORT).show();
-        } catch (IOException e) {
+        } catch (IOException | CsvValidationException e) {
             e.printStackTrace();
+            // Manejar cualquier error que pueda ocurrir al leer el archivo CSV
             Toast.makeText(this, "Error al importar trabajadores desde CSV", Toast.LENGTH_SHORT).show();
-        } catch (CsvValidationException e) {
-            throw new RuntimeException(e);
         }
     }
 
-    private String hashPassword(String password) {
-        try {
-            // Crear una instancia de MessageDigest con el algoritmo SHA-256
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
 
-            // Aplicar el hash a la contraseña
-            byte[] encodedHash = digest.digest(password.getBytes());
 
-            // Convertir el byte array a un string hexadecimal
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : encodedHash) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
-                hexString.append(hex);
-            }
-            return hexString.toString();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Error al generar el hash de la contraseña", e);
-        }
+    private void addWorkerToDatabase(Worker worker) {
+        // Generar un ID aleatorio para el trabajador
+        String workerId = UUID.randomUUID().toString();
+
+        // Actualizar el documento correspondiente en la base de datos Firestore con el ID generado
+        workersCollection.document(workerId).set(worker)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("IMPORT", "Trabajador importado exitosamente");
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("IMPORT", "Error al importar trabajador", e);
+                });
     }
-
     private void abrirVentanaFlotanteAddWorker() {
         // Código para abrir una ventana flotante para añadir un trabajador
         AddWorkerFragment addWorkerFragment = new AddWorkerFragment();

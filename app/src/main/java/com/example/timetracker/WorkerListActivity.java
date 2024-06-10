@@ -1,6 +1,7 @@
 package com.example.timetracker;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -10,25 +11,32 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class WorkerListActivity extends AppCompatActivity {
 
-    private FirebaseFirestore db;
+    private DatabaseReference db;
     private ListView listViewWorkers;
     private ArrayAdapter<String> adapter;
     private List<String> workerList;
     private Button btnBack;
     private SearchView searchView;
 
+    private static final String TAG = "WorkerListActivity";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_worker_list);
+
+        Log.d(TAG, "onCreate: starting");
 
         Toolbar toolbar = findViewById(R.id.toolbar_worker_list);
         setSupportActionBar(toolbar);
@@ -42,7 +50,7 @@ public class WorkerListActivity extends AppCompatActivity {
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, workerList);
         listViewWorkers.setAdapter(adapter);
 
-        db = FirebaseFirestore.getInstance();
+        db = FirebaseDatabase.getInstance().getReference().child("workers");
 
         loadWorkers();
 
@@ -65,21 +73,29 @@ public class WorkerListActivity extends AppCompatActivity {
     }
 
     private void loadWorkers() {
-        db.collection("workers")
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        for (QueryDocumentSnapshot document : task.getResult()) {
-                            String worker = "ID: " + document.getString("id") +
-                                    "\nName: " + document.getString("name") +
-                                    "\nSurname: " + document.getString("surname");
-                            workerList.add(worker);
-                        }
-                        adapter.notifyDataSetChanged();
+        Log.d(TAG, "loadWorkers: querying database");
+        db.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                workerList.clear();
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    String email = snapshot.child("email").getValue(String.class);
+                    if (email != null) {
+                        workerList.add(email);
+                        Log.d(TAG, "Added email: " + email);
                     } else {
-                        // Manejar el fallo
-                        Toast.makeText(WorkerListActivity.this, "Error al cargar los trabajadores", Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, "Email is null for snapshot " + snapshot.getKey());
                     }
-                });
+                }
+                Log.d(TAG, "Total workers added: " + workerList.size());
+                adapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.w(TAG, "loadWorkers:onCancelled", databaseError.toException());
+                Toast.makeText(WorkerListActivity.this, "Error al cargar los trabajadores", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

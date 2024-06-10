@@ -45,6 +45,9 @@ public class Worker {
         this.nieNif = nieNif;
     }
 
+    public Worker(String s, String s1, String s2) {
+    }
+
     // Getters y setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
