@@ -203,6 +203,12 @@ public class FirebaseHelper {
                 .addOnFailureListener(e -> dataStatus.onError(e.getMessage()));
     }
 
+    public void addWorker(Worker worker) {
+        String key = databaseReference.child("workers").push().getKey();
+        worker.setId(key);
+        databaseReference.child("workers").child(key).setValue(worker);
+    }
+
     public interface DataStatus {
         void DataIsLoaded(List<?> data);
 

@@ -17,6 +17,8 @@ import android.widget.ImageButton;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -33,6 +35,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.sql.RowId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,8 +49,12 @@ public class PanellAdministrador extends AppCompatActivity {
     private CollectionReference workersCollection;
     private Toolbar toolbar_panell;
 
+    private FirebaseHelper firebaseHelper;
+
     private static final int REQUEST_CODE_PERMISSION = 123;
     private static final int REQUEST_CODE_CSV_FILE = 456;
+
+    private DatabaseReference databaseReference;
 
     private ActivityResultLauncher<String> csvFileLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(),
             uri -> {
@@ -69,6 +76,8 @@ public class PanellAdministrador extends AppCompatActivity {
         ibAddGroup = findViewById(R.id.ibAddGroup);
         ibAddUser = findViewById(R.id.ibAddUser);
         btnClose = findViewById(R.id.close_button);
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        databaseReference = database.getReference("workers");
 
         workersCollection = FirebaseFirestore.getInstance().collection("workers");
 
@@ -143,14 +152,10 @@ public class PanellAdministrador extends AppCompatActivity {
                     String password = nextLine[1];
                     String name = nextLine[2];
 
-                    // Generar un ID aleatorio para el trabajador
-                    String workerId = UUID.randomUUID().toString();
+                    Worker worker = new Worker(null,name,email,password);
 
-                    // Crear un objeto Worker con los datos obtenidos
-                    Worker worker = new Worker(workerId, name,null , email, "", "", 0, 0, false, password, "");
+                    guardarTrabajador(worker);
 
-                    // Agregar el trabajador a la base de datos Firestore
-                    addWorkerToDatabase(worker);
 
                     // Agregar registro de log
                     Log.d("CSV_IMPORT", "Trabajador procesado: " + worker.getEmail());
@@ -178,14 +183,25 @@ public class PanellAdministrador extends AppCompatActivity {
         // Generar un ID aleatorio para el trabajador
         String workerId = UUID.randomUUID().toString();
 
+        // Log antes de realizar la operación de escritura en la base de datos
+        Log.d("ADD_WORKER", "Agregando trabajador a la base de datos: " + worker.getEmail());
+
         // Actualizar el documento correspondiente en la base de datos Firestore con el ID generado
         workersCollection.document(workerId).set(worker)
                 .addOnSuccessListener(aVoid -> {
-                    Log.d("IMPORT", "Trabajador importado exitosamente");
+                    // Log después de que se completa la operación de escritura
+                    Log.d("ADD_WORKER", "Trabajador importado exitosamente: " + worker.getEmail());
                 })
                 .addOnFailureListener(e -> {
-                    Log.e("IMPORT", "Error al importar trabajador", e);
+                    // Log en caso de error
+                    Log.e("ADD_WORKER", "Error al importar trabajador", e);
                 });
+    }
+
+    private void guardarTrabajador(Worker worker) {
+        String key = databaseReference.child("workers").push().getKey();
+        worker.setId(key);
+        databaseReference.child("workers").child(key).setValue(worker);
     }
     private void abrirVentanaFlotanteAddWorker() {
         // Código para abrir una ventana flotante para añadir un trabajador

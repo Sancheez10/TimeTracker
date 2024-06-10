@@ -1,4 +1,9 @@
+/*
+
 package com.example.timetracker;
+
+
+
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -39,7 +44,7 @@ public class AnnotationsAdapter extends ArrayAdapter<Anotacion> {
         TextView tvTexto = convertView.findViewById(R.id.tvTexto);
         TextView tvCreatedBy = convertView.findViewById(R.id.tvCreatedBy);
         TextView tvFechaHora = convertView.findViewById(R.id.tvFechaHora);
-        Button btnDelete = convertView.findViewById(R.id.btnDelete);
+        //Button btnDelete = convertView.findViewById(R.id.btnDelete);
 
         // Configurar las vistas con los datos de la anotación
         tvTexto.setText(anotacion.getTexto());
@@ -61,3 +66,4 @@ public class AnnotationsAdapter extends ArrayAdapter<Anotacion> {
         void onDeleteClick(Anotacion anotacion);
     }
 }
+*/

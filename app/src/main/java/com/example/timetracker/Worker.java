@@ -45,7 +45,11 @@ public class Worker {
         this.nieNif = nieNif;
     }
 
-    public Worker(String s, String s1, String s2) {
+    public Worker(String id,String nombre, String email, String password) {
+        this.id = id;
+        this.name = nombre;
+        this.email = email;
+        this.password = password;
     }
 
     // Getters y setters
