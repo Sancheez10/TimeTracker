@@ -1,36 +1,39 @@
-<?xml version="1.0" encoding="utf-8"?>
+<!-- res/layout/item_anotacion.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="8dp">
+    android:padding="16dp">
 
     <TextView
-        android:id="@+id/tvTexto"
+        android:id="@+id/tvTextoAnotacion"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Texto de la anotación"
-        android:textSize="16sp" />
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/tvFechaHoraAnotacion"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Fecha y hora"
+        android:layout_marginBottom="8dp" />
 
     <TextView
         android:id="@+id/tvCreatedBy"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Creado por"
-        android:textSize="14sp"
-        android:textStyle="italic" />
-
-    <TextView
-        android:id="@+id/tvFechaHora"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Fecha y hora"
-        android:textSize="14sp"
-        android:textStyle="italic" />
+        android:layout_marginBottom="8dp" />
 
     <Button
-        android:id="@+id/btnDelete"
+        android:id="@+id/btnEliminar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Eliminar" />
+        android:text="Eliminar"
+        android:backgroundTint="@android:color/holo_red_light"
+        android:textColor="@android:color/white"
+        android:layout_gravity="end"
+        android:layout_marginTop="8dp" />
 </LinearLayout>
