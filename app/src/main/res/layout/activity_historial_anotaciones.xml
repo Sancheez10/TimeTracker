@@ -1,20 +1,64 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    tools:context=".HistorialAnotacionesActivity">
 
+    <!-- Toolbar en la parte superior -->
     <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar5"
+        android:id="@+id/toolbarHistorial"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        android:elevation="4dp"
+        android:title="Historial"
+        android:titleTextColor="@android:color/white" />
+
+    <!-- Botón "Atrás" alineado a la izquierda debajo de la Toolbar -->
+    <Button
+        android:id="@+id/btnAtras"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Atrás"
+        android:background="?attr/selectableItemBackground"
+        android:layout_below="@id/toolbarHistorial"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="10dp"
+        android:padding="10dp" />
+
+    <!-- Botón "Refrescar" alineado a la derecha del botón "Atrás" -->
+    <Button
+        android:id="@+id/btnRefrescar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Refrescar"
+        android:background="?attr/selectableItemBackground"
+        android:layout_below="@id/toolbarHistorial"
+        android:layout_toEndOf="@id/btnAtras"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:padding="10dp" />
+
+    <!-- Lista de Anotaciones ocupando el resto del espacio -->
+    <ListView
+        android:id="@+id/listViewAnotaciones"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_below="@id/btnAtras"
+        android:layout_above="@id/btnMarcarComoVistas"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Botón para marcar todas las anotaciones como vistas -->
+    <Button
+        android:id="@+id/btnMarcarComoVistas"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
-        android:minHeight="?attr/actionBarSize"
-        android:theme="?attr/actionBarTheme" />
+        android:text="Marcar todas como vistas"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="16dp"
+        android:padding="10dp" />
 
-    <ListView
-        android:id="@+id/lvAnotaciones"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
-</LinearLayout>
+</RelativeLayout>

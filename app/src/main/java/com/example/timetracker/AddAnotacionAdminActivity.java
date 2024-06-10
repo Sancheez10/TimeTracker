@@ -14,6 +14,9 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -25,8 +28,8 @@ public class AddAnotacionAdminActivity extends AppCompatActivity {
     private TextView tvFechaHora;
     private Date fechaHoraSeleccionada;
     private Uri archivoAdjuntoUri;
-
     private FirebaseHelper firebaseHelper;
+    private FirebaseAuth mAuth;
 
     // Launcher para seleccionar archivo
     private final ActivityResultLauncher<Intent> filePickerLauncher = registerForActivityResult(
@@ -49,6 +52,7 @@ public class AddAnotacionAdminActivity extends AppCompatActivity {
         tvFechaHora = findViewById(R.id.tvFechaHora);
 
         firebaseHelper = new FirebaseHelper();
+        mAuth = FirebaseAuth.getInstance();
 
         btnFechaHora.setOnClickListener(v -> seleccionarFechaHora());
         btnAdjuntarArchivo.setOnClickListener(v -> seleccionarArchivo());
@@ -81,9 +85,16 @@ public class AddAnotacionAdminActivity extends AppCompatActivity {
             return;
         }
 
-        String createdBy = "Nombre del Trabajador"; // Debes obtener el nombre del trabajador logueado
+        // Obtén el usuario actual de Firebase
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        String createdBy = "Desconocido";
 
-        Anotacion anotacion = new Anotacion(null, texto, fechaHoraSeleccionada, null, createdBy);
+        if (currentUser != null) {
+            // Usar el nombre del usuario o el email si el nombre no está disponible
+            createdBy = currentUser.getDisplayName() != null ? currentUser.getDisplayName() : currentUser.getEmail();
+        }
+
+        Anotacion anotacion = new Anotacion(null, texto, fechaHoraSeleccionada, null, createdBy, false);
 
         // Si se ha seleccionado un archivo, subirlo a Firebase Storage
         if (archivoAdjuntoUri != null) {
@@ -91,27 +102,7 @@ public class AddAnotacionAdminActivity extends AppCompatActivity {
                 @Override
                 public void onFileUploaded(String fileUrl) {
                     anotacion.setFileUrl(fileUrl);
-                    firebaseHelper.addAnotacion(anotacion, new FirebaseHelper.DataStatus() {
-                        @Override
-                        public void DataIsLoaded(List<?> data) {}
-
-                        @Override
-                        public void DataIsInserted() {
-                            Toast.makeText(AddAnotacionAdminActivity.this, "Anotación guardada", Toast.LENGTH_SHORT).show();
-                            finish();
-                        }
-
-                        @Override
-                        public void DataIsUpdated() {}
-
-                        @Override
-                        public void DataIsDeleted() {}
-
-                        @Override
-                        public void onError(String errorMessage) {
-                            Toast.makeText(AddAnotacionAdminActivity.this, "Error al guardar la anotación: " + errorMessage, Toast.LENGTH_SHORT).show();
-                        }
-                    });
+                    guardarAnotacionEnFirebase(anotacion);
                 }
 
                 @Override
@@ -120,27 +111,32 @@ public class AddAnotacionAdminActivity extends AppCompatActivity {
                 }
             });
         } else {
-            firebaseHelper.addAnotacion(anotacion, new FirebaseHelper.DataStatus() {
-                @Override
-                public void DataIsLoaded(List<?> data) {}
-
-                @Override
-                public void DataIsInserted() {
-                    Toast.makeText(AddAnotacionAdminActivity.this, "Anotación guardada", Toast.LENGTH_SHORT).show();
-                    finish();
-                }
-
-                @Override
-                public void DataIsUpdated() {}
-
-                @Override
-                public void DataIsDeleted() {}
-
-                @Override
-                public void onError(String errorMessage) {
-                    Toast.makeText(AddAnotacionAdminActivity.this, "Error al guardar la anotación: " + errorMessage, Toast.LENGTH_SHORT).show();
-                }
-            });
+            // Si no hay archivo adjunto, guardar directamente la anotación
+            guardarAnotacionEnFirebase(anotacion);
         }
+    }
+
+    private void guardarAnotacionEnFirebase(Anotacion anotacion) {
+        firebaseHelper.addAnotacion(anotacion, new FirebaseHelper.DataStatus() {
+            @Override
+            public void DataIsLoaded(List<?> data) {}
+
+            @Override
+            public void DataIsInserted() {
+                Toast.makeText(AddAnotacionAdminActivity.this, "Anotación guardada", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+
+            @Override
+            public void DataIsUpdated() {}
+
+            @Override
+            public void DataIsDeleted() {}
+
+            @Override
+            public void onError(String errorMessage) {
+                Toast.makeText(AddAnotacionAdminActivity.this, "Error al guardar la anotación: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
