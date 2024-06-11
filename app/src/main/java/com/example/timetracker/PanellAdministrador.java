@@ -27,6 +27,8 @@ import com.google.gson.GsonBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -143,7 +145,7 @@ public class PanellAdministrador extends AppCompatActivity {
             // Leer las líneas del archivo CSV
             String[] nextLine;
             while ((nextLine = reader.readNext()) != null) {
-                Log.d("CSV_IMPORT", "Línea leída del CSV: " + Arrays.toString(nextLine));
+
 
                 // Verificar si la línea tiene la estructura esperada
                 if (nextLine.length >= 3) {
@@ -152,7 +154,9 @@ public class PanellAdministrador extends AppCompatActivity {
                     String password = nextLine[1];
                     String name = nextLine[2];
 
-                    Worker worker = new Worker(null,name,email,password);
+                    String hashedPassword = hashPassword(password);
+
+                    Worker worker = new Worker(null,name,email,hashedPassword);
 
                     guardarTrabajador(worker);
 
@@ -177,31 +181,15 @@ public class PanellAdministrador extends AppCompatActivity {
         }
     }
 
-
-
-    private void addWorkerToDatabase(Worker worker) {
-        // Generar un ID aleatorio para el trabajador
-        String workerId = UUID.randomUUID().toString();
-
-        // Log antes de realizar la operación de escritura en la base de datos
-        Log.d("ADD_WORKER", "Agregando trabajador a la base de datos: " + worker.getEmail());
-
-        // Actualizar el documento correspondiente en la base de datos Firestore con el ID generado
-        workersCollection.document(workerId).set(worker)
-                .addOnSuccessListener(aVoid -> {
-                    // Log después de que se completa la operación de escritura
-                    Log.d("ADD_WORKER", "Trabajador importado exitosamente: " + worker.getEmail());
-                })
-                .addOnFailureListener(e -> {
-                    // Log en caso de error
-                    Log.e("ADD_WORKER", "Error al importar trabajador", e);
-                });
+    private String hashPassword(String password) {
+        return BCrypt.hashpw(password, BCrypt.gensalt());
     }
 
+
     private void guardarTrabajador(Worker worker) {
-        String key = databaseReference.child("workers").push().getKey();
+        String key = databaseReference.push().getKey();
         worker.setId(key);
-        databaseReference.child("workers").child(key).setValue(worker);
+        databaseReference.child(key).setValue(worker);
     }
     private void abrirVentanaFlotanteAddWorker() {
         // Código para abrir una ventana flotante para añadir un trabajador

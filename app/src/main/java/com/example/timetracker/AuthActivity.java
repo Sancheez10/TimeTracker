@@ -17,8 +17,11 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -73,21 +76,7 @@ public class AuthActivity extends AppCompatActivity {
             return;
         }
 
-        firebaseAuth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Inicio de sesión exitoso
-                            String userId = firebaseAuth.getCurrentUser().getUid();
-                            saveUserDataInPreferences(userId, email);
-                            redirectToMainActivity();
-                        } else {
-                            // Fallo en el inicio de sesión, muestra un mensaje de error
-                            Toast.makeText(AuthActivity.this, "Fallo en el inicio de sesión: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
+        authenticateUser(email, password);
     }
 
     private void signUpUser() {
@@ -162,4 +151,37 @@ public class AuthActivity extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
+
+    private void authenticateUser(String email, String password) {
+        databaseRef.orderByChild("email").equalTo(email).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                        Worker worker = userSnapshot.getValue(Worker.class);
+                        if (worker != null && BCrypt.checkpw(password, worker.getPassword())) {
+                            // La autenticación fue exitosa
+                            Toast.makeText(AuthActivity.this, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show();
+                            // Proceder con el flujo de inicio de sesión
+                            saveUserDataInPreferences(userSnapshot.getKey(), email);
+                            redirectToMainActivity();
+                        } else {
+                            // La contraseña es incorrecta
+                            Toast.makeText(AuthActivity.this, "Contraseña incorrecta", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                } else {
+                    // No se encontró el usuario
+                    Toast.makeText(AuthActivity.this, "No se encontró el usuario", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // Manejar el error
+                Toast.makeText(AuthActivity.this, "Error de autenticación", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
 }
