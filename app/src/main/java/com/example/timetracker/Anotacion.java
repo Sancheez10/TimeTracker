@@ -22,6 +22,13 @@ public class Anotacion {
         this.isViewed = isViewed;
     }
 
+    public Anotacion(String id, String texto, String createdBy,  boolean isViewed) {
+        this.id = id;
+        this.texto = texto;
+        this.createdBy = createdBy;
+        this.isViewed = isViewed;
+    }
+
     // Getters y setters
 
     public String getId() {

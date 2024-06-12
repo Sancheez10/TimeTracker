@@ -31,7 +31,6 @@ public class AddAnotacionAdminActivity extends AppCompatActivity {
     private FirebaseHelper firebaseHelper;
     private FirebaseAuth mAuth;
 
-    // Launcher para seleccionar archivo
     private final ActivityResultLauncher<Intent> filePickerLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {

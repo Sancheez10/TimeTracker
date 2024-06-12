@@ -1,5 +1,5 @@
-/*
 
+/*
 package com.example.timetracker;
 
 
@@ -41,7 +41,7 @@ public class AnnotationsAdapter extends ArrayAdapter<Anotacion> {
         }
 
         // Obtener las vistas del layout
-        TextView tvTexto = convertView.findViewById(R.id.tvTexto);
+        TextView tvTexto = convertView.findViewById(R.id.tvTextoAnotacion);
         TextView tvCreatedBy = convertView.findViewById(R.id.tvCreatedBy);
         TextView tvFechaHora = convertView.findViewById(R.id.tvFechaHora);
         //Button btnDelete = convertView.findViewById(R.id.btnDelete);
@@ -52,7 +52,7 @@ public class AnnotationsAdapter extends ArrayAdapter<Anotacion> {
         tvFechaHora.setText(anotacion.getFechaHora().toString());
 
         // Configurar el botón de eliminar
-        btnDelete.setOnClickListener(v -> {
+       btnDelete.setOnClickListener(v -> {
             if (mListener != null) {
                 mListener.onDeleteClick(anotacion);
             }
@@ -60,7 +60,6 @@ public class AnnotationsAdapter extends ArrayAdapter<Anotacion> {
 
         return convertView;
     }
-
     // Interfaz para manejar el click en el botón de eliminar
     public interface OnDeleteClickListener {
         void onDeleteClick(Anotacion anotacion);
