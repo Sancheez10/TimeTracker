@@ -147,23 +147,10 @@ public class MainActivity extends AppCompatActivity {
 
         MenuItem adminMenuItem = menu.findItem(R.id.action_Admin);
 
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            String currentUserUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-            DocumentReference userRef = db.collection("workers").document(currentUserUid);
+        boolean isAdmin = sharedPreferences.getBoolean("isAdmin", false);
 
-            userRef.get().addOnSuccessListener(documentSnapshot -> {
-                if (documentSnapshot.exists()) {
-                    boolean isAdmin = documentSnapshot.getBoolean("admin");
-
-                    if (isAdmin) {
-                        adminMenuItem.setVisible(true);
-                    } else {
-                        adminMenuItem.setVisible(false);
-                    }
-                }
-            }).addOnFailureListener(e -> {
-            });
+        if (isAdmin) {
+            adminMenuItem.setVisible(true);
         } else {
             adminMenuItem.setVisible(false);
         }

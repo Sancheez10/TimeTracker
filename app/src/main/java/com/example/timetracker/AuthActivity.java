@@ -121,6 +121,21 @@ public class AuthActivity extends AppCompatActivity {
         databaseRef.child(userId).setValue(user)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
+                        // Obtener el valor de admin desde el snapshot actualizado
+                        databaseRef.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                Boolean isAdmin = dataSnapshot.child("admin").getValue(Boolean.class);
+                                saveUserDataInPreferences(userId, email);
+                                saveAdminStatusInPreferences(isAdmin);
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                                Log.e("AuthActivity", "Error al obtener datos de usuario: " + databaseError.getMessage());
+                            }
+                        });
+
                         Toast.makeText(AuthActivity.this, "Datos guardados", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(AuthActivity.this, "Error al guardar los datos: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
@@ -146,7 +161,6 @@ public class AuthActivity extends AppCompatActivity {
     }
 
     private void authenticateUser(String email, String password) {
-
         databaseRef.orderByChild("email").equalTo(email).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -154,25 +168,30 @@ public class AuthActivity extends AppCompatActivity {
                     for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
                         Worker user = userSnapshot.getValue(Worker.class);
                         if (user != null && BCrypt.checkpw(password, user.getPassword())) {
+                            Boolean isAdmin = userSnapshot.child("admin").getValue(Boolean.class);
                             saveUserDataInPreferences(userSnapshot.getKey(), email);
+                            saveAdminStatusInPreferences(isAdmin);
+
                             redirectToMainActivity();
                         } else {
                             Toast.makeText(AuthActivity.this, "Correo o contraseña incorrecta", Toast.LENGTH_SHORT).show();
                         }
                     }
                 } else {
-
                     Toast.makeText(AuthActivity.this, "El usuario no existe", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
                 Toast.makeText(AuthActivity.this, "Error en la autenticación", Toast.LENGTH_SHORT).show();
             }
         });
+    }
 
-
-}
+    private void saveAdminStatusInPreferences(boolean isAdmin) {
+        SharedPreferences.Editor editor = getSharedPreferences("workers_pref", Context.MODE_PRIVATE).edit();
+        editor.putBoolean("isAdmin", isAdmin);
+        editor.apply();
+    }
 }
