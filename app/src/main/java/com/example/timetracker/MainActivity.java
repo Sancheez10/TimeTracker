@@ -154,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
 
             userRef.get().addOnSuccessListener(documentSnapshot -> {
                 if (documentSnapshot.exists()) {
-                    boolean isAdmin = documentSnapshot.getBoolean("isAdmin");
+                    boolean isAdmin = documentSnapshot.getBoolean("admin");
 
                     if (isAdmin) {
                         adminMenuItem.setVisible(true);
@@ -163,7 +163,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             }).addOnFailureListener(e -> {
-                // Manejar cualquier error al obtener los datos del usuario
             });
         } else {
             adminMenuItem.setVisible(false);

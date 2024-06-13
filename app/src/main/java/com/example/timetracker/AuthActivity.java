@@ -52,6 +52,8 @@ public class AuthActivity extends AppCompatActivity {
 
         loginButton.setOnClickListener(v -> loginUser());
         signUpButton.setOnClickListener(v -> signUpUser());
+
+
     }
 
     private boolean isAllowedDomain(String email) {
@@ -174,5 +176,5 @@ public class AuthActivity extends AppCompatActivity {
         });
 
 
-}
+    }
 }
