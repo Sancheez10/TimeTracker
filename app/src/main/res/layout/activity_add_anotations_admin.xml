@@ -36,5 +36,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Guardar anotación" />
+    <Button
+        android:id="@+id/bHistorial"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Historial" />
 
 </LinearLayout>

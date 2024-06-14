@@ -73,7 +73,6 @@ public class AuthActivity extends AppCompatActivity {
             return;
         }
 
-
         authenticateUser(email, password);
     }
 
@@ -97,7 +96,6 @@ public class AuthActivity extends AppCompatActivity {
             return;
         }
 
-
         firebaseAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
@@ -110,7 +108,6 @@ public class AuthActivity extends AppCompatActivity {
                     }
                 });
     }
-
 
     private boolean isValidEmail(String email) {
         return Patterns.EMAIL_ADDRESS.matcher(email).matches();
