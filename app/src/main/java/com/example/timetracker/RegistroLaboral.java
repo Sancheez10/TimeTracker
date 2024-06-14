@@ -5,6 +5,8 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -27,6 +29,8 @@ public class RegistroLaboral extends AppCompatActivity {
     private boolean isAdmin;
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
+    private SharedPreferences sharedPreferences;
+    private String currentUserUid;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +42,8 @@ public class RegistroLaboral extends AppCompatActivity {
 
         recyclerViewFichajes = findViewById(R.id.recyclerViewFichajes);
         recyclerViewFichajes.setLayoutManager(new LinearLayoutManager(this));
+        sharedPreferences = getSharedPreferences("workers_pref", Context.MODE_PRIVATE);
+
 
         searchView = findViewById(R.id.searchView);
 
@@ -53,7 +59,8 @@ public class RegistroLaboral extends AppCompatActivity {
         recyclerViewFichajes.setAdapter(adapter);
 
         // Verificar si el usuario es administrador
-        String currentUserUid = mAuth.getCurrentUser().getUid();
+        currentUserUid = sharedPreferences.getString("userId", "Usuario");
+
         db.collection("workers").document(currentUserUid).get().addOnSuccessListener(documentSnapshot -> {
             if (documentSnapshot.exists()) {
                 isAdmin = documentSnapshot.getBoolean("isAdmin");
@@ -70,8 +77,9 @@ public class RegistroLaboral extends AppCompatActivity {
     }
 
     private void loadUserFichajes(String userId) {
-        db.collection("checkins")
-                .whereEqualTo("userId", userId)
+        db.collection("Timer")
+                .document("Timer")
+                .collection(currentUserUid)
                 .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
@@ -107,7 +115,9 @@ public class RegistroLaboral extends AppCompatActivity {
         });
 
         // Cargar todos los fichajes inicialmente para el administrador
-        db.collection("checkins")
+        db.collection("Timer")
+                .document("Timer")
+                .collection(currentUserUid)
                 .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
@@ -129,8 +139,9 @@ public class RegistroLaboral extends AppCompatActivity {
     }
 
     private void searchFichajes(String query) {
-        db.collection("checkins")
-                .whereGreaterThanOrEqualTo("userName", query)
+        db.collection("Timer")
+                .document("Timer")
+                .collection(currentUserUid)
                 .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
