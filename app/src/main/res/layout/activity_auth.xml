@@ -29,14 +29,6 @@
         android:inputType="textPassword"
         android:layout_marginTop="16dp"/>
 
-    <EditText
-        android:id="@+id/confirmPasswordEditText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Confirmar contraseña"
-        android:inputType="textPassword"
-        android:layout_marginTop="16dp"/>
-
     <Button
         android:id="@+id/loginButton"
         android:layout_width="match_parent"
@@ -44,10 +36,4 @@
         android:text="Iniciar sesión"
         android:layout_marginTop="32dp"/>
 
-    <Button
-        android:id="@+id/signUpButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Registrarse"
-        android:layout_marginTop="16dp"/>
 </LinearLayout>

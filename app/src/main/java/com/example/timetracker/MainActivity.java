@@ -147,6 +147,7 @@ public class MainActivity extends AppCompatActivity {
 
         MenuItem adminMenuItem = menu.findItem(R.id.action_Admin);
 
+
         boolean isAdmin = sharedPreferences.getBoolean("isAdmin", false);
 
         if (isAdmin) {
@@ -161,6 +162,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
         if (item.getItemId() == R.id.mis_cuentas) {
             Intent intent = new Intent(this, Cuentas.class);
             startActivity(intent);
