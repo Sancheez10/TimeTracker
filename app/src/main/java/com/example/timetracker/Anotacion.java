@@ -22,9 +22,10 @@ public class Anotacion {
         this.isViewed = isViewed;
     }
 
-    public Anotacion(String id, String texto, String createdBy,  boolean isViewed) {
+    public Anotacion(String id, String texto, Date fechaHora, String createdBy, boolean isViewed) {
         this.id = id;
         this.texto = texto;
+        this.fechaHora = fechaHora;
         this.createdBy = createdBy;
         this.isViewed = isViewed;
     }

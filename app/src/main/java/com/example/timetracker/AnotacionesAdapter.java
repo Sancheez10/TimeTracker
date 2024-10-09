@@ -1,6 +1,7 @@
 package com.example.timetracker;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,7 +10,6 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.SimpleDateFormat;
@@ -20,11 +20,16 @@ public class AnotacionesAdapter extends ArrayAdapter<Anotacion> {
 
     private Context context;
     private List<Anotacion> anotaciones;
+    private String currentUserEmail; // Email del usuario actual, obtenido de SharedPreferences
 
     public AnotacionesAdapter(Context context, List<Anotacion> anotaciones) {
         super(context, R.layout.item_anotacion, anotaciones);
         this.context = context;
         this.anotaciones = anotaciones;
+
+        // Obtener el correo del usuario desde SharedPreferences
+        SharedPreferences sharedPreferences = context.getSharedPreferences("workers_pref", Context.MODE_PRIVATE);
+        this.currentUserEmail = sharedPreferences.getString("email", "Usuario"); // Asignar el email del usuario
     }
 
     @Override
@@ -48,15 +53,20 @@ public class AnotacionesAdapter extends ArrayAdapter<Anotacion> {
 
         tvCreatedBy.setText("Creado por: " + anotacion.getCreatedBy());
 
-        // Acción de eliminar anotación
-        btnEliminar.setOnClickListener(v -> eliminarAnotacion(anotacion));
+        // Solo permitir eliminar la anotación si el correo del usuario actual coincide con el creador
+        if (anotacion.getCreatedBy().equals(currentUserEmail)) {
+            btnEliminar.setVisibility(View.VISIBLE); // Mostrar botón de eliminar
+            btnEliminar.setOnClickListener(v -> eliminarAnotacion(anotacion));
+        } else {
+            btnEliminar.setVisibility(View.GONE); // Ocultar botón de eliminar si no es el creador
+        }
 
         return convertView;
     }
 
     private void eliminarAnotacion(Anotacion anotacion) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String userId = currentUserEmail; // Usar el email del usuario actual en lugar de userId
 
         db.collection("anotaciones_users")
                 .document(userId)

@@ -23,9 +23,6 @@ import com.google.firebase.database.ValueEventListener;
 
 import org.mindrot.jbcrypt.BCrypt;
 
-import java.util.Arrays;
-import java.util.List;
-
 public class AuthActivity extends AppCompatActivity {
     private EditText emailEditText, passwordEditText;
     private Button loginButton;
@@ -48,15 +45,26 @@ public class AuthActivity extends AppCompatActivity {
         sharedPreferences = getSharedPreferences("workers_pref", Context.MODE_PRIVATE);
 
         loginButton.setOnClickListener(v -> loginUser());
-
     }
 
     private void loginUser() {
         String email = emailEditText.getText().toString().trim();
         String password = passwordEditText.getText().toString().trim();
 
+        // Validaciones básicas de entrada
         if (TextUtils.isEmpty(email)) {
             emailEditText.setError("Ingresa un correo electrónico");
+            return;
+        }
+
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            emailEditText.setError("Ingresa un correo válido");
+            return;
+        }
+
+        // Validación del dominio del correo
+        if (!email.endsWith("@timetracker.com")) {
+            emailEditText.setError("El correo debe tener el dominio @timetracker.com");
             return;
         }
 
@@ -65,6 +73,7 @@ public class AuthActivity extends AppCompatActivity {
             return;
         }
 
+        // Si todas las validaciones pasan, autenticar al usuario
         authenticateUser(email, password);
     }
 

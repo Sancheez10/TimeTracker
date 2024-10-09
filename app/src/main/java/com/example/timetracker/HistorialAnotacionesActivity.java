@@ -1,5 +1,3 @@
-
-
 package com.example.timetracker;
 
 import android.content.SharedPreferences;
@@ -12,9 +10,11 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class HistorialAnotacionesActivity extends AppCompatActivity {
 
@@ -22,7 +22,9 @@ public class HistorialAnotacionesActivity extends AppCompatActivity {
     private Button btnAtras, btnRefrescar, btnMarcarComoVistas;
     private ArrayAdapter<String> adapter;
     private List<String> anotacionesList;
+    private FirebaseFirestore db;
     private SharedPreferences sharedPreferences;
+    private String userEmail;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,8 +48,12 @@ public class HistorialAnotacionesActivity extends AppCompatActivity {
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, anotacionesList);
         lvAnotaciones.setAdapter(adapter);
 
-        // Obtener SharedPreferences
-        sharedPreferences = getSharedPreferences("anotaciones_prefs", MODE_PRIVATE);
+        // Inicialización de Firebase Firestore
+        db = FirebaseFirestore.getInstance();
+
+        // Obtener SharedPreferences para obtener el correo del usuario
+        sharedPreferences = getSharedPreferences("workers_pref", MODE_PRIVATE);
+        userEmail = sharedPreferences.getString("email", "Desconocido");
 
         // Listener para el botón "Atrás"
         btnAtras.setOnClickListener(v -> finish());
@@ -59,24 +65,41 @@ public class HistorialAnotacionesActivity extends AppCompatActivity {
         cargarAnotaciones();
     }
 
+    /**
+     * Método para cargar las anotaciones desde Firebase Firestore.
+     */
     private void cargarAnotaciones() {
         // Limpiar la lista antes de cargar nuevos datos
         anotacionesList.clear();
 
-        // Obtener todas las anotaciones guardadas en SharedPreferences
-        Map<String, ?> allEntries = sharedPreferences.getAll();
-        for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
-            String textoAnotacion = entry.getValue().toString();
-            anotacionesList.add(textoAnotacion);
+        // Verificar si se obtuvo el correo del usuario
+        if (userEmail.equals("Desconocido")) {
+            Toast.makeText(this, "Error al obtener el correo del usuario", Toast.LENGTH_SHORT).show();
+            return;
         }
 
-        // Notificar al adaptador que los datos han cambiado
-        adapter.notifyDataSetChanged();
+        // Realizar la consulta a Firebase Firestore para obtener las anotaciones del usuario actual
+        db.collection("anotaciones_users")
+                .document(userEmail)
+                .collection("anotaciones")
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        // Recorrer las anotaciones y agregarlas a la lista
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            Anotacion anotacion = document.toObject(Anotacion.class);
+                            anotacionesList.add(anotacion.getTexto() + "\nFecha: " + anotacion.getFechaHora());
+                        }
 
-        if (anotacionesList.isEmpty()) {
-            Toast.makeText(this, "No hay anotaciones para mostrar", Toast.LENGTH_SHORT).show();
-        }
+                        // Notificar al adaptador que los datos han cambiado
+                        adapter.notifyDataSetChanged();
+
+                        if (anotacionesList.isEmpty()) {
+                            Toast.makeText(this, "No hay anotaciones para mostrar", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(this, "Error al cargar anotaciones", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
-
-
 }
