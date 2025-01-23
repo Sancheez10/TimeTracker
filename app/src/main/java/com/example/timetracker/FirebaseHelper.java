@@ -176,6 +176,7 @@ public class FirebaseHelper {
                 .addOnFailureListener(e -> dataStatus.onError(e.getMessage()));
     }
 
+
     // 15. Obtener todos los grupos
     public void getAllGroups(final DataStatus dataStatus) {
         databaseReference.child("groups").addValueEventListener(new ValueEventListener() {
@@ -226,4 +227,7 @@ public class FirebaseHelper {
 
         void onError(String errorMessage);
     }
+
+
+
 }

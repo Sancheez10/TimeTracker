@@ -1,29 +1,25 @@
 package com.example.timetracker;
 
-import android.app.DatePickerDialog;
-import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.Calendar;
-import java.util.Date;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import java.util.List;
 
 public class AddAnotacionActivity extends AppCompatActivity {
 
     private EditText etTextoAnotacion;
-    private Button btnFechaHora, btnGuardarAnotacion, bhistorial;
-    private TextView tvFechaHora;
-    private Date fechaHoraSeleccionada; // Fecha seleccionada por el usuario
-    private FirebaseHelper firebaseHelper;
+    private Button btnGuardarAnotacion, bhistorial;
     private SharedPreferences sharedPreferences;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,19 +27,14 @@ public class AddAnotacionActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_anotations_admin);
 
         etTextoAnotacion = findViewById(R.id.etTextoAnotacion);
-        btnFechaHora = findViewById(R.id.btnFechaHora);
         btnGuardarAnotacion = findViewById(R.id.btnGuardarAnotacion);
-        tvFechaHora = findViewById(R.id.tvFechaHora);
         bhistorial = findViewById(R.id.bHistorial);
-
-        // Inicializar FirebaseHelper
-        firebaseHelper = new FirebaseHelper();
 
         // Obtener SharedPreferences
         sharedPreferences = getSharedPreferences("workers_pref", MODE_PRIVATE);
 
-        // Selección de fecha y hora
-        btnFechaHora.setOnClickListener(v -> seleccionarFechaHora());
+        // Inicializar FirebaseAuth
+        mAuth = FirebaseAuth.getInstance();
 
         // Guardar anotación
         btnGuardarAnotacion.setOnClickListener(v -> guardarAnotacion());
@@ -53,26 +44,7 @@ public class AddAnotacionActivity extends AppCompatActivity {
     }
 
     /**
-     * Método para mostrar los diálogos de selección de fecha y hora.
-     */
-    private void seleccionarFechaHora() {
-        final Calendar calendar = Calendar.getInstance();
-
-        // Mostrar DatePickerDialog para seleccionar la fecha
-        DatePickerDialog datePickerDialog = new DatePickerDialog(this, (view, year, month, dayOfMonth) -> {
-            // Mostrar TimePickerDialog para seleccionar la hora
-            TimePickerDialog timePickerDialog = new TimePickerDialog(this, (timeView, hourOfDay, minute) -> {
-                calendar.set(year, month, dayOfMonth, hourOfDay, minute);
-                fechaHoraSeleccionada = calendar.getTime(); // Guardar la fecha y hora seleccionada
-                tvFechaHora.setText(fechaHoraSeleccionada.toString()); // Mostrar la fecha seleccionada
-            }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
-            timePickerDialog.show();
-        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
-        datePickerDialog.show();
-    }
-
-    /**
-     * Guarda la anotación tanto en Firebase como en SharedPreferences.
+     * Guarda la anotación en SharedPreferences y Firebase.
      */
     private void guardarAnotacion() {
         String texto = etTextoAnotacion.getText().toString();
@@ -83,50 +55,50 @@ public class AddAnotacionActivity extends AppCompatActivity {
             return;
         }
 
-        // Validar que se haya seleccionado una fecha y hora
-        if (fechaHoraSeleccionada == null) {
-            Toast.makeText(this, "Por favor, seleccione una fecha y hora", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
         // Obtener el correo del usuario desde SharedPreferences
         String createdBy = sharedPreferences.getString("email", "Desconocido");
 
-        // Crear una nueva anotación
-        Anotacion anotacion = new Anotacion(null, texto, fechaHoraSeleccionada, null, createdBy, false);
+        // Crear la anotación como un string con formato: texto - creado por
+        String anotacion = "Texto: " + texto + " - Por: " + createdBy;
 
-        // Guardar en Firebase
-        guardarAnotacionEnFirebase(anotacion);
-
-        // Guardar en SharedPreferences (opcional, por si deseas un almacenamiento local)
+        // Guardar anotación en SharedPreferences
         guardarAnotacionEnSharedPreferences(anotacion);
+
+        // Obtener el usuario actual de Firebase
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            // Usar el nombre del usuario o el email si el nombre no está disponible
+            createdBy = currentUser.getDisplayName() != null ? currentUser.getDisplayName() : currentUser.getEmail();
+        }
+
+        // Crear el objeto Anotacion para Firebase
+        Anotacion anotacionFirebase = new Anotacion(null, texto, null, null, createdBy, false);
+
+        // Guardar la anotación en Firebase
+        guardarAnotacionEnFirebase(anotacionFirebase);
     }
+
+
 
     /**
      * Guarda la anotación en Firebase.
      */
     private void guardarAnotacionEnFirebase(Anotacion anotacion) {
+        FirebaseHelper firebaseHelper = new FirebaseHelper();
         firebaseHelper.addAnotacion(anotacion, new FirebaseHelper.DataStatus() {
             @Override
-            public void DataIsLoaded(List<?> data) {
-                // No usado aquí
-            }
+            public void DataIsLoaded(List<?> data) {}
 
             @Override
             public void DataIsInserted() {
-                Toast.makeText(AddAnotacionActivity.this, "Anotación guardada", Toast.LENGTH_SHORT).show();
-                finish(); // Finaliza la actividad tras guardar la anotación
+                Toast.makeText(AddAnotacionActivity.this, "Anotación guardada en Firebase", Toast.LENGTH_SHORT).show();
             }
 
             @Override
-            public void DataIsUpdated() {
-                // No usado aquí
-            }
+            public void DataIsUpdated() {}
 
             @Override
-            public void DataIsDeleted() {
-                // No usado aquí
-            }
+            public void DataIsDeleted() {}
 
             @Override
             public void onError(String errorMessage) {
@@ -136,13 +108,25 @@ public class AddAnotacionActivity extends AppCompatActivity {
     }
 
     /**
-     * Guarda la anotación en SharedPreferences para almacenamiento local.
+     * Guarda la anotación en SharedPreferences.
      */
-    private void guardarAnotacionEnSharedPreferences(Anotacion anotacion) {
+    private void guardarAnotacionEnSharedPreferences(String anotacion) {
+        // Obtener las anotaciones previamente guardadas (si hay alguna)
+        String anotacionesGuardadas = sharedPreferences.getString("anotaciones", "");
+
+        // Si ya hay anotaciones guardadas, agregamos la nueva
+        if (!anotacionesGuardadas.isEmpty()) {
+            anotacionesGuardadas += "|" + anotacion; // Usamos "|" como delimitador
+        } else {
+            anotacionesGuardadas = anotacion; // Si no hay anotaciones, simplemente guardamos la primera
+        }
+
+        // Guardar las anotaciones concatenadas
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("anotacion_text", anotacion.getTexto());
-        editor.putString("anotacion_created_by", anotacion.getCreatedBy());
+        editor.putString("anotaciones", anotacionesGuardadas);
         editor.apply();
+
+        Toast.makeText(AddAnotacionActivity.this, "Anotación guardada en SharedPreferences", Toast.LENGTH_SHORT).show();
     }
 
     /**

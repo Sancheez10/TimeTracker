@@ -13,25 +13,6 @@
         android:inputType="textMultiLine" />
 
     <Button
-        android:id="@+id/btnFechaHora"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Seleccionar fecha y hora" />
-
-    <TextView
-        android:id="@+id/tvFechaHora"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Fecha y hora seleccionada"
-        android:padding="8dp" />
-
-    <Button
-        android:id="@+id/btnAdjuntarArchivo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Adjuntar archivo" />
-
-    <Button
         android:id="@+id/btnGuardarAnotacion"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

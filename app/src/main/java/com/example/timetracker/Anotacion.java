@@ -8,7 +8,8 @@ public class Anotacion {
     private Date fechaHora; // Fecha y hora de la anotación
     private String fileUrl; // URL del archivo adjunto, si lo hay
     private String createdBy; // Usuario que creó la anotación
-    private boolean isViewed; // Indicador de si la anotación ha sido vista
+    private boolean viewed; // Indicador de si la anotación ha sido vista
+
 
     // Constructor vacío necesario para Firebase
     public Anotacion() {}
@@ -19,7 +20,7 @@ public class Anotacion {
         this.fechaHora = fechaHora;
         this.fileUrl = fileUrl;
         this.createdBy = createdBy;
-        this.isViewed = isViewed;
+        this.viewed = isViewed;
     }
 
     public Anotacion(String id, String texto, Date fechaHora, String createdBy, boolean isViewed) {
@@ -27,7 +28,7 @@ public class Anotacion {
         this.texto = texto;
         this.fechaHora = fechaHora;
         this.createdBy = createdBy;
-        this.isViewed = isViewed;
+        this.viewed = isViewed;
     }
 
     // Getters y setters
@@ -73,10 +74,11 @@ public class Anotacion {
     }
 
     public boolean isViewed() {
-        return isViewed;
+        return viewed; // Mantén este método si prefieres llamarlo 'isViewed' en tu código
     }
 
     public void setViewed(boolean viewed) {
-        isViewed = viewed;
+        this.viewed = viewed;
     }
+
 }

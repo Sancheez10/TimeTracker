@@ -3,6 +3,7 @@ package com.example.timetracker;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Button;
@@ -24,20 +25,9 @@ import java.util.List;
 public class AddAnotacionAdminActivity extends AppCompatActivity {
 
     private EditText etTextoAnotacion;
-    private Button btnFechaHora, btnAdjuntarArchivo, btnGuardarAnotacion;
-    private TextView tvFechaHora;
-    private Date fechaHoraSeleccionada;
-    private Uri archivoAdjuntoUri;
-    private FirebaseHelper firebaseHelper;
+    private Button btnGuardarAnotacion, bhistorial;
+    private SharedPreferences sharedPreferences;
     private FirebaseAuth mAuth;
-
-    private final ActivityResultLauncher<Intent> filePickerLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    archivoAdjuntoUri = result.getData().getData();
-                }
-            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,85 +35,71 @@ public class AddAnotacionAdminActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_anotations_admin);
 
         etTextoAnotacion = findViewById(R.id.etTextoAnotacion);
-        btnFechaHora = findViewById(R.id.btnFechaHora);
-        btnAdjuntarArchivo = findViewById(R.id.btnAdjuntarArchivo);
         btnGuardarAnotacion = findViewById(R.id.btnGuardarAnotacion);
-        tvFechaHora = findViewById(R.id.tvFechaHora);
+        bhistorial = findViewById(R.id.bHistorial);
 
-        firebaseHelper = new FirebaseHelper();
+        // Obtener SharedPreferences
+        sharedPreferences = getSharedPreferences("workers_pref", MODE_PRIVATE);
+
+        // Inicializar FirebaseAuth
         mAuth = FirebaseAuth.getInstance();
 
-        btnFechaHora.setOnClickListener(v -> seleccionarFechaHora());
-        btnAdjuntarArchivo.setOnClickListener(v -> seleccionarArchivo());
+        // Guardar anotación
         btnGuardarAnotacion.setOnClickListener(v -> guardarAnotacion());
+
+        // Ir al historial de anotaciones
+        bhistorial.setOnClickListener(view -> clickHistorial());
     }
 
-    private void seleccionarFechaHora() {
-        final Calendar calendar = Calendar.getInstance();
-        DatePickerDialog datePickerDialog = new DatePickerDialog(this, (view, year, month, dayOfMonth) -> {
-            TimePickerDialog timePickerDialog = new TimePickerDialog(this, (timeView, hourOfDay, minute) -> {
-                calendar.set(year, month, dayOfMonth, hourOfDay, minute);
-                fechaHoraSeleccionada = calendar.getTime();
-                tvFechaHora.setText(fechaHoraSeleccionada.toString());
-            }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true);
-            timePickerDialog.show();
-        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
-        datePickerDialog.show();
-    }
-
-    private void seleccionarArchivo() {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("*/*");
-        filePickerLauncher.launch(intent);
-    }
-
+    /**
+     * Guarda la anotación en SharedPreferences y Firebase.
+     */
     private void guardarAnotacion() {
         String texto = etTextoAnotacion.getText().toString();
-        if (texto.isEmpty() || fechaHoraSeleccionada == null) {
+
+        // Validar que el campo de texto no esté vacío
+        if (texto.isEmpty()) {
             Toast.makeText(this, "Por favor, complete todos los campos", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Obtén el usuario actual de Firebase
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        String createdBy = "Desconocido";
+        // Obtener el correo del usuario desde SharedPreferences
+        String createdBy = sharedPreferences.getString("email", "Desconocido");
 
+        // Crear la anotación como un string con formato: texto - creado por
+        String anotacion = "Texto: " + texto + " - Por: " + createdBy;
+
+        // Guardar anotación en SharedPreferences
+        guardarAnotacionEnSharedPreferences(anotacion);
+
+        // Obtener el usuario actual de Firebase
+        FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
             // Usar el nombre del usuario o el email si el nombre no está disponible
             createdBy = currentUser.getDisplayName() != null ? currentUser.getDisplayName() : currentUser.getEmail();
         }
 
-        Anotacion anotacion = new Anotacion(null, texto, fechaHoraSeleccionada, null, createdBy, false);
+        // Crear el objeto Anotacion para Firebase
+        Anotacion anotacionFirebase = new Anotacion(null, texto, null, null, createdBy, false);
 
-        // Si se ha seleccionado un archivo, subirlo a Firebase Storage
-        if (archivoAdjuntoUri != null) {
-            firebaseHelper.uploadFile(archivoAdjuntoUri, new FirebaseHelper.FileUploadCallback() {
-                @Override
-                public void onFileUploaded(String fileUrl) {
-                    anotacion.setFileUrl(fileUrl);
-                    guardarAnotacionEnFirebase(anotacion);
-                }
-
-                @Override
-                public void onError(String errorMessage) {
-                    Toast.makeText(AddAnotacionAdminActivity.this, "Error al subir el archivo: " + errorMessage, Toast.LENGTH_SHORT).show();
-                }
-            });
-        } else {
-            // Si no hay archivo adjunto, guardar directamente la anotación
-            guardarAnotacionEnFirebase(anotacion);
-        }
+        // Guardar la anotación en Firebase
+        guardarAnotacionEnFirebase(anotacionFirebase);
     }
 
+
+
+    /**
+     * Guarda la anotación en Firebase.
+     */
     private void guardarAnotacionEnFirebase(Anotacion anotacion) {
+        FirebaseHelper firebaseHelper = new FirebaseHelper();
         firebaseHelper.addAnotacion(anotacion, new FirebaseHelper.DataStatus() {
             @Override
             public void DataIsLoaded(List<?> data) {}
 
             @Override
             public void DataIsInserted() {
-                Toast.makeText(AddAnotacionAdminActivity.this, "Anotación guardada", Toast.LENGTH_SHORT).show();
-                finish();
+                Toast.makeText(AddAnotacionAdminActivity.this, "Anotación guardada en Firebase", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -137,5 +113,35 @@ public class AddAnotacionAdminActivity extends AppCompatActivity {
                 Toast.makeText(AddAnotacionAdminActivity.this, "Error al guardar la anotación: " + errorMessage, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    /**
+     * Guarda la anotación en SharedPreferences.
+     */
+    private void guardarAnotacionEnSharedPreferences(String anotacion) {
+        // Obtener las anotaciones previamente guardadas (si hay alguna)
+        String anotacionesGuardadas = sharedPreferences.getString("anotaciones", "");
+
+        // Si ya hay anotaciones guardadas, agregamos la nueva
+        if (!anotacionesGuardadas.isEmpty()) {
+            anotacionesGuardadas += "|" + anotacion; // Usamos "|" como delimitador
+        } else {
+            anotacionesGuardadas = anotacion; // Si no hay anotaciones, simplemente guardamos la primera
+        }
+
+        // Guardar las anotaciones concatenadas
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("anotaciones", anotacionesGuardadas);
+        editor.apply();
+
+        Toast.makeText(AddAnotacionAdminActivity.this, "Anotación guardada en SharedPreferences", Toast.LENGTH_SHORT).show();
+    }
+
+    /**
+     * Ir a la actividad del historial de anotaciones.
+     */
+    public void clickHistorial() {
+        Intent intent = new Intent(this, HistorialAnotacionesActivity.class);
+        startActivity(intent);
     }
 }
