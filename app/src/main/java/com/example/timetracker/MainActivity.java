@@ -49,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean isWorking = false;
     private SharedPreferences sharedPreferences;
     private Handler handler = new Handler();
+    private boolean hasEntryTime = false;
+
 
 
     @Override
@@ -103,8 +105,12 @@ public class MainActivity extends AppCompatActivity {
             isWorking = true;
             tvStatus.setText("Trabajando");
             bWorkStatus.setText("Detener");
-            String address = ((TextView)findViewById(R.id.getLocationButton)).getText().toString(); // Obtener la dirección del TextView
-            saveEntryToDatabase(startTime, address);
+            String address = ((TextView)findViewById(R.id.getLocationButton)).getText().toString(); // Obtener dirección
+
+            if (!hasEntryTime) { // Solo guarda la entrada si no ha sido registrada
+                saveEntryToDatabase(startTime, address);
+                hasEntryTime = true;
+            }
             startTimer();
         } else {
             endTime = System.currentTimeMillis();
@@ -116,6 +122,31 @@ public class MainActivity extends AppCompatActivity {
             calculateAndDisplayTotalTime();
         }
     }
+
+    public void finishWork(View view) {
+        isWorking = false;
+        tvStatus.setText("Trabajo finalizado");
+        bWorkStatus.setText("Iniciar nuevo día");
+
+        saveExitToDatabase(System.currentTimeMillis());
+        stopTimer();
+        calculateAndDisplayTotalTime();
+
+        // Reiniciar variables para el nuevo día
+        hasEntryTime = false;
+        startTime = 0;
+        endTime = 0;
+        elapsedTime = 0;
+
+        // Reiniciar UI
+        tvTimer.setText("00:00:00");
+
+        // Reiniciar el total de horas trabajadas en SharedPreferences
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("totalTimeWorked", "00:00:00");
+        editor.apply();
+    }
+
 
     // Método para detener el contador
     private void stopTimer() {
@@ -301,6 +332,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+
+    private String formatDate(long timeInMillis) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        Date date = new Date(timeInMillis);
+        return sdf.format(date);
+    }
+
     private void checkLocationSettingsAndShowMessage() {
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         boolean isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
@@ -325,12 +364,14 @@ public class MainActivity extends AppCompatActivity {
     private void saveEntryToDatabase(long entryTime, String address) {
         String userId = sharedPreferences.getString("userId", "");
         String entryTimeStr = formatTime(entryTime);
+        String entryDateStr = formatDate(entryTime); // Obtener la fecha
 
-        // Crear un nuevo nodo para el usuario en la base de datos
-        DatabaseReference userRef = databaseRef.child("Timer").child(userId);
+        // Crear un nuevo nodo usando la fecha como identificador
+        DatabaseReference userRef = databaseRef.child("Timer").child(userId).child(entryDateStr);
 
-        // Guardar la hora de entrada del usuario
+        // Guardar la hora y fecha de entrada del usuario
         userRef.child("entry_time").setValue(entryTimeStr);
+        userRef.child("entry_date").setValue(entryDateStr);
         userRef.child("entry_address").setValue(address);
     }
 
@@ -338,13 +379,15 @@ public class MainActivity extends AppCompatActivity {
     private void saveExitToDatabase(long exitTime) {
         String userId = sharedPreferences.getString("userId", "");
         String exitTimeStr = formatTime(exitTime);
+        String entryDateStr = formatDate(exitTime); // Obtener la fecha actual
 
-        // Obtener la referencia al nodo del usuario en la base de datos
-        DatabaseReference userRef = databaseRef.child("Timer").child(userId);
+        // Referencia al nodo específico del día
+        DatabaseReference userRef = databaseRef.child("Timer").child(userId).child(entryDateStr);
 
         // Guardar la hora de salida del usuario
         userRef.child("exit_time").setValue(exitTimeStr);
     }
+
 
 
     private String formatTime(long timeInMillis) {
@@ -361,39 +404,26 @@ public class MainActivity extends AppCompatActivity {
         int seconds = totalSeconds % 60;
 
         String userId = sharedPreferences.getString("userId", "");
+        String entryDateStr = formatDate(System.currentTimeMillis()); // Usar la fecha actual
 
-        // Obtener la referencia al nodo del usuario en la base de datos
-        DatabaseReference userRef = databaseRef.child("Timer").child(userId);
+        // Referencia al nodo específico del día
+        DatabaseReference userRef = databaseRef.child("Timer").child(userId).child(entryDateStr);
 
-        // Obtener el tiempo total trabajado anteriormente por el usuario
-        String previousTotalTimeStr = sharedPreferences.getString("totalTimeWorked", "00:00:00");
+        // Formatear el tiempo total trabajado para este día
+        String totalTimeStr = String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds);
 
-        // Convertir el tiempo total trabajado anteriormente a horas, minutos y segundos
-        String[] previousTotalTimeParts = previousTotalTimeStr.split(":");
-        int previousHours = Integer.parseInt(previousTotalTimeParts[0]);
-        int previousMinutes = Integer.parseInt(previousTotalTimeParts[1]);
-        int previousSeconds = Integer.parseInt(previousTotalTimeParts[2]);
+        // Guardar el total de horas trabajadas en la base de datos
+        userRef.child("total_hours_worked").setValue(totalTimeStr);
 
-        // Calcular el nuevo tiempo total trabajado sumando el tiempo anterior y el actual
-        int newTotalSeconds = (previousHours * 3600) + (previousMinutes * 60) + previousSeconds + totalSeconds;
-        int newHours = newTotalSeconds / 3600;
-        int newMinutes = (newTotalSeconds % 3600) / 60;
-        int newSeconds = newTotalSeconds % 60;
-
-        // Formatear el nuevo tiempo total trabajado como una cadena HH:mm:ss
-        String newTotalTimeStr = String.format(Locale.getDefault(), "%02d:%02d:%02d", newHours, newMinutes, newSeconds);
-
-        // Guardar el nuevo tiempo total trabajado en las preferencias
+        // Guardar en SharedPreferences para futuras referencias
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("totalTimeWorked", newTotalTimeStr);
+        editor.putString("totalTimeWorked", totalTimeStr);
         editor.apply();
 
-        // Actualizar el tiempo total trabajado en la base de datos
-        userRef.child("total_hours_worked").setValue(newTotalTimeStr);
-
-        // Actualizar el TextView con el nuevo tiempo total trabajado
-        tvTimer.setText(newTotalTimeStr);
+        // Actualizar la UI
+        tvTimer.setText(totalTimeStr);
     }
+
 
 
 }
