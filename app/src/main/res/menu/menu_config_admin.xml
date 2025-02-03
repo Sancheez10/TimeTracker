@@ -1,17 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/action_nombrarSubadmin"
-        android:title="@string/nombrarSubadmin" />
-    <item
         android:id="@+id/action_anotaciones"
         android:title="@string/anotaciones" />
-    <item
-        android:id="@+id/action_dispositivosRestricciones"
-        android:title="@string/dispositivosyrestricciones" />
-    <item
-        android:id="@+id/action_etiquetas"
-        android:title="@string/etiquetas" />
     <item
         android:id="@+id/action_exportar"
         android:title="@string/exportar" />

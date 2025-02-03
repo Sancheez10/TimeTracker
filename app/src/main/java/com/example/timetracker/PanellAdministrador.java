@@ -216,17 +216,8 @@ public class PanellAdministrador extends AppCompatActivity {
         // Configurar los listeners para las opciones del menú
         popupMenu.setOnMenuItemClickListener(item -> {
             // Manejar la selección de la opción del menú
-            if (item.getItemId() == R.id.action_nombrarSubadmin) {
-                abrirActividadNombrarSubadmin();
-                return true;
-            } else if (item.getItemId() == R.id.action_anotaciones) {
+            if (item.getItemId() == R.id.action_anotaciones) {
                 abrirActividadAnotaciones();
-                return true;
-            } else if (item.getItemId() == R.id.action_dispositivosRestricciones) {
-                abrirActividadDispositivosRestricciones();
-                return true;
-            } else if (item.getItemId() == R.id.action_etiquetas) {
-                abrirActividadEtiquetas();
                 return true;
             } else if (item.getItemId() == R.id.action_exportar) {
                 exportWorkersToJSON();
@@ -242,23 +233,8 @@ public class PanellAdministrador extends AppCompatActivity {
         popupMenu.show();
     }
 
-    private void abrirActividadNombrarSubadmin() {
-        Intent intent = new Intent(PanellAdministrador.this, NombrarSubadmin.class);
-        startActivity(intent);
-    }
-
     private void abrirActividadAnotaciones() {
         Intent intent = new Intent(PanellAdministrador.this, AddAnotacionAdminActivity.class);
-        startActivity(intent);
-    }
-
-    private void abrirActividadDispositivosRestricciones() {
-        Intent intent = new Intent(PanellAdministrador.this, DispositivosRestricciones.class);
-        startActivity(intent);
-    }
-
-    private void abrirActividadEtiquetas() {
-        Intent intent = new Intent(PanellAdministrador.this, Etiquetas.class);
         startActivity(intent);
     }
 
