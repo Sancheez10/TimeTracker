@@ -56,9 +56,9 @@
         android:id="@+id/btnMarcarComoVistas"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Marcar todas como vistas"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="16dp"
-        android:padding="10dp" />
+        android:padding="10dp"
+        android:text="CLICA ENCIMA DE LAS ANOTACIONES PARA ELIMINARLAS" />
 
 </RelativeLayout>

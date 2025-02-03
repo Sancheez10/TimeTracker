@@ -1,5 +1,7 @@
 package com.example.timetracker;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -17,6 +19,8 @@ public class HistorialAnotacionesActivity extends AppCompatActivity {
     private ListView listView;
     private FirebaseAuth mAuth;
     private FirebaseHelper firebaseHelper;
+
+    private SharedPreferences sharedPreferences;
 
     private List<Anotacion> anotaciones; // Lista de objetos Anotacion
     private List<String> anotacionesText; // Lista de textos para mostrar en el ListView
@@ -90,6 +94,8 @@ public class HistorialAnotacionesActivity extends AppCompatActivity {
 
     private void eliminarAnotacionSiEsPropia(Anotacion anotacion) {
         // Verificar si el usuario actual es el creador de la anotación
+        sharedPreferences = getSharedPreferences("workers_pref", Context.MODE_PRIVATE);
+        boolean isAdmin = sharedPreferences.getBoolean("isAdmin", false);
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null && anotacion.getCreatedBy().equals(currentUser.getEmail())) {
             // Eliminar la anotación
@@ -114,7 +120,31 @@ public class HistorialAnotacionesActivity extends AppCompatActivity {
                     Toast.makeText(HistorialAnotacionesActivity.this, "Error al eliminar: " + errorMessage, Toast.LENGTH_SHORT).show();
                 }
             });
-        } else {
+        } else if(isAdmin) {
+            firebaseHelper.deleteAnotacion(anotacion.getId(), new FirebaseHelper.DataStatus() {
+                @Override
+                public void DataIsLoaded(List<?> data) {}
+
+                @Override
+                public void DataIsInserted() {}
+
+                @Override
+                public void DataIsUpdated() {}
+
+                @Override
+                public void DataIsDeleted() {
+                    Toast.makeText(HistorialAnotacionesActivity.this, "Anotación eliminada", Toast.LENGTH_SHORT).show();
+                    cargarAnotaciones(); // Recargar las anotaciones después de eliminar
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    Toast.makeText(HistorialAnotacionesActivity.this, "Error al eliminar: " + errorMessage, Toast.LENGTH_SHORT).show();
+                }
+            });
+
+        }
+        else{
             Toast.makeText(this, "No puedes eliminar esta anotación.", Toast.LENGTH_SHORT).show();
         }
     }
