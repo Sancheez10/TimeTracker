@@ -63,11 +63,6 @@
         <activity
             android:name=".LegalNoticeActivity"
             android:exported="false" />
-        <activity
-            android:name=".AnnotationsAdapter"
-            android:exported="false" />
-        <activity android:name=".DispositivosRestricciones" />
-        <activity android:name=".Etiquetas" />
         <activity android:name=".Cuentas" />
         <activity android:name=".Horarios" />
         <activity
@@ -80,17 +75,17 @@
             android:name=".PanellAdministrador"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".AuthActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
-            android:name=".AuthActivity"
-            android:exported="true" />
+            android:name=".MainActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
