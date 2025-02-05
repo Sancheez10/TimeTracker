@@ -5,7 +5,10 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SearchView;
@@ -13,8 +16,11 @@ import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,12 +29,14 @@ public class RegistroLaboral extends AppCompatActivity {
 
     private RecyclerView recyclerViewFichajes;
     private RegistroLaboralAdapter adapter;
-    private List<Fichaje> fichajeList, fichajeListFull;
+    private List<String> fichajeList, fichajeListFull;
     private SearchView searchView;
     private boolean isAdmin;
     private FirebaseAuth mAuth;
-    private FirebaseFirestore db;
+    private DatabaseReference dbRef;
     private String currentUserUid;
+
+    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,14 +52,16 @@ public class RegistroLaboral extends AppCompatActivity {
         Button btnBack = findViewById(R.id.btn_back);
         btnBack.setOnClickListener(view -> finish());
 
-        mAuth = FirebaseAuth.getInstance();
-        db = FirebaseFirestore.getInstance();
+        sharedPreferences = getSharedPreferences("workers_pref", Context.MODE_PRIVATE);
+        String email = sharedPreferences.getString("email", "Usuario");
 
-        // Obtener el UID del usuario autenticado
+
+        mAuth = FirebaseAuth.getInstance();
+        dbRef = FirebaseDatabase.getInstance().getReference();
+
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
             currentUserUid = currentUser.getUid();
-            Toast.makeText(this, "Usuario autenticado: " + currentUserUid, Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(this, "Error: No hay usuario autenticado", Toast.LENGTH_LONG).show();
             finish();
@@ -64,20 +74,14 @@ public class RegistroLaboral extends AppCompatActivity {
         adapter = new RegistroLaboralAdapter(fichajeList);
         recyclerViewFichajes.setAdapter(adapter);
 
-        // Verificar si es administrador
-        db.collection("workers").document(currentUserUid).get().addOnSuccessListener(documentSnapshot -> {
-            if (documentSnapshot.exists()) {
-                isAdmin = documentSnapshot.getBoolean("isAdmin");
-                if (isAdmin) {
-                    searchView.setVisibility(View.VISIBLE);
-                    loadAllFichajes();
-                } else {
-                    loadUserFichajes(currentUserUid);
-                }
-            }
-        }).addOnFailureListener(e ->
-                Toast.makeText(this, "Error al obtener la información del usuario: " + e.getMessage(), Toast.LENGTH_SHORT).show()
-        );
+        boolean isAdmin = sharedPreferences.getBoolean("isAdmin", false);
+
+        if (isAdmin) {
+            searchView.setVisibility(View.VISIBLE);
+            loadAllFichajes();
+        } else {
+            loadUserFichajes(currentUserUid);
+        }
 
         // Configurar búsqueda en tiempo real
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -96,70 +100,99 @@ public class RegistroLaboral extends AppCompatActivity {
     }
 
     private void loadUserFichajes(String userId) {
-        db.collection("Timer").document("Timer").collection(userId)
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        fichajeList.clear();
-                        fichajeListFull.clear();
+        dbRef.child("Timer").child("Timer").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                fichajeList.clear();
+                fichajeListFull.clear();
 
-                        if (task.getResult().isEmpty()) {
-                            Toast.makeText(this, "No hay registros para este usuario", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
+                if (!snapshot.exists()) {
+                    Log.d("Firebase", "No hay datos en Timer para el usuario: " + userId);
+                    Toast.makeText(RegistroLaboral.this, "No hay registros para este usuario", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
-                        for (QueryDocumentSnapshot fechaDoc : task.getResult()) {
-                            String fecha = fechaDoc.getId(); // El ID del documento es la fecha (ej: "2025-02-03")
+                for (DataSnapshot fichajeSnap : snapshot.getChildren()) {
+                    String fecha = fichajeSnap.getKey();  // Clave es la fecha (ej. "2025-02-04")
+                    String entryTime = fichajeSnap.child("entry_time").getValue(String.class);
+                    String exitTime = fichajeSnap.child("exit_time").getValue(String.class);
+                    String totalHours = fichajeSnap.child("total_hours_worked").getValue(String.class);
 
-                            Fichaje fichaje = new Fichaje(
-                                    fechaDoc.getString("entry_date"),
-                                    fechaDoc.getString("entry_address"),
-                                    fechaDoc.getString("entry_time"),
-                                    fechaDoc.getString("exit_time"),
-                                    fechaDoc.getString("total_hours_worked")
-                            );
-
-                            fichajeList.add(fichaje);
-                            fichajeListFull.add(fichaje);
-                        }
-
-                        adapter.notifyDataSetChanged();
-                    } else {
-                        Toast.makeText(this, "Error al cargar los fichajes: " + task.getException(), Toast.LENGTH_SHORT).show();
+                    if (totalHours != null && !totalHours.contains("-")) { // Evitar valores incorrectos
+                        String entry = "Fecha: " + fecha +
+                                "\nEntrada: " + entryTime +
+                                "\nSalida: " + exitTime +
+                                "\nHoras trabajadas: " + totalHours;
+                        fichajeList.add(entry);
+                        fichajeListFull.add(entry);
                     }
-                });
+                }
+
+                adapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                Log.e("Firebase", "Error al obtener fichajes", error.toException());
+                Toast.makeText(RegistroLaboral.this, "Error al cargar los fichajes", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
+
+
+
 
 
     private void loadAllFichajes() {
-        db.collection("Timer").document("Timer").collection(currentUserUid)
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        fichajeList.clear();
-                        fichajeListFull.clear();
-                        for (QueryDocumentSnapshot document : task.getResult()) {
-                            Fichaje fichaje = new Fichaje(
-                                    document.getString("date"),
-                                    document.getString("location"),
-                                    document.getString("checkInTime"),
-                                    document.getString("checkOutTime"),
-                                    document.getString("userId")
-                            );
-                            fichajeList.add(fichaje);
-                            fichajeListFull.add(fichaje);
+        dbRef.child("Timer").child("Timer").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                fichajeList.clear();
+                fichajeListFull.clear();
+
+                if (!snapshot.exists()) {
+                    Log.d("Firebase", "No hay datos en Timer");
+                    return;
+                }
+
+                for (DataSnapshot userSnap : snapshot.getChildren()) {
+                    String userId = userSnap.getKey(); // ID del usuario
+
+                    for (DataSnapshot fichajeSnap : userSnap.getChildren()) {
+                        String fecha = fichajeSnap.getKey(); // Fecha del fichaje
+                        String entryTime = fichajeSnap.child("entry_time").getValue(String.class);
+                        String exitTime = fichajeSnap.child("exit_time").getValue(String.class);
+                        String totalHours = fichajeSnap.child("total_hours_worked").getValue(String.class);
+
+                        if (totalHours != null && !totalHours.contains("-")) { // Filtrar valores inválidos
+                            String entry = "Usuario: " + userId +
+                                    "\nFecha: " + fecha +
+                                    "\nEntrada: " + entryTime +
+                                    "\nSalida: " + exitTime +
+                                    "\nHoras trabajadas: " + totalHours;
+                            fichajeList.add(entry);
+                            fichajeListFull.add(entry);
                         }
-                        adapter.notifyDataSetChanged();
-                    } else {
-                        Toast.makeText(this, "Error al cargar los fichajes", Toast.LENGTH_SHORT).show();
                     }
-                });
+                }
+
+                adapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                Log.e("Firebase", "Error al obtener fichajes", error.toException());
+                Toast.makeText(RegistroLaboral.this, "Error al cargar los fichajes", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
+
+
     private void filterFichajes(String query) {
-        List<Fichaje> filteredList = new ArrayList<>();
-        for (Fichaje fichaje : fichajeListFull) {
-            if (fichaje.getDate().contains(query) || fichaje.getLocation().toLowerCase().contains(query.toLowerCase())) {
+        List<String> filteredList = new ArrayList<>();
+        for (String fichaje : fichajeListFull) {
+            if (fichaje.contains(query)) {
                 filteredList.add(fichaje);
             }
         }
