@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.SearchView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,6 +18,7 @@ import java.util.List;
 
 public class HistorialAnotacionesActivity extends AppCompatActivity {
     private ListView listView;
+    private SearchView searchView;
     private FirebaseAuth mAuth;
     private FirebaseHelper firebaseHelper;
 
@@ -24,6 +26,7 @@ public class HistorialAnotacionesActivity extends AppCompatActivity {
 
     private List<Anotacion> anotaciones; // Lista de objetos Anotacion
     private List<String> anotacionesText; // Lista de textos para mostrar en el ListView
+    private ArrayAdapter<String> adapter; // Adaptador del ListView
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,8 +37,9 @@ public class HistorialAnotacionesActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         firebaseHelper = new FirebaseHelper();
 
-        // Inicializar ListView
+        // Inicializar ListView y SearchView
         listView = findViewById(R.id.listViewAnotaciones);
+        searchView = findViewById(R.id.searchView);
 
         // Cargar anotaciones y mostrarlas
         cargarAnotaciones();
@@ -44,6 +48,21 @@ public class HistorialAnotacionesActivity extends AppCompatActivity {
         listView.setOnItemClickListener((parent, view, position, id) -> {
             Anotacion anotacionSeleccionada = anotaciones.get(position);
             eliminarAnotacionSiEsPropia(anotacionSeleccionada);
+        });
+
+        // Configurar el filtro de búsqueda en tiempo real
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                filtrarAnotaciones(query);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filtrarAnotaciones(newText);
+                return false;
+            }
         });
     }
 
@@ -71,7 +90,7 @@ public class HistorialAnotacionesActivity extends AppCompatActivity {
                 }
 
                 // Mostrar las anotaciones en el ListView
-                ArrayAdapter<String> adapter = new ArrayAdapter<>(HistorialAnotacionesActivity.this,
+                adapter = new ArrayAdapter<>(HistorialAnotacionesActivity.this,
                         android.R.layout.simple_list_item_1, anotacionesText);
                 listView.setAdapter(adapter);
             }
@@ -92,11 +111,30 @@ public class HistorialAnotacionesActivity extends AppCompatActivity {
         });
     }
 
+    private void filtrarAnotaciones(String query) {
+        List<String> anotacionesFiltradas = new ArrayList<>();
+
+        for (int i = 0; i < anotaciones.size(); i++) {
+            Anotacion anotacion = anotaciones.get(i);
+            String textoCompleto = "Texto: " + anotacion.getTexto() + " - Por: " + anotacion.getCreatedBy();
+
+            if (textoCompleto.toLowerCase().contains(query.toLowerCase())) {
+                anotacionesFiltradas.add(textoCompleto);
+            }
+        }
+
+        // Actualizar el ListView con las anotaciones filtradas
+        adapter.clear();
+        adapter.addAll(anotacionesFiltradas);
+        adapter.notifyDataSetChanged();
+    }
+
     private void eliminarAnotacionSiEsPropia(Anotacion anotacion) {
         // Verificar si el usuario actual es el creador de la anotación
         sharedPreferences = getSharedPreferences("workers_pref", Context.MODE_PRIVATE);
         boolean isAdmin = sharedPreferences.getBoolean("isAdmin", false);
         FirebaseUser currentUser = mAuth.getCurrentUser();
+
         if (currentUser != null && anotacion.getCreatedBy().equals(currentUser.getEmail())) {
             // Eliminar la anotación
             firebaseHelper.deleteAnotacion(anotacion.getId(), new FirebaseHelper.DataStatus() {
@@ -120,7 +158,7 @@ public class HistorialAnotacionesActivity extends AppCompatActivity {
                     Toast.makeText(HistorialAnotacionesActivity.this, "Error al eliminar: " + errorMessage, Toast.LENGTH_SHORT).show();
                 }
             });
-        } else if(isAdmin) {
+        } else if (isAdmin) {
             firebaseHelper.deleteAnotacion(anotacion.getId(), new FirebaseHelper.DataStatus() {
                 @Override
                 public void DataIsLoaded(List<?> data) {}
@@ -143,8 +181,7 @@ public class HistorialAnotacionesActivity extends AppCompatActivity {
                 }
             });
 
-        }
-        else{
+        } else {
             Toast.makeText(this, "No puedes eliminar esta anotación.", Toast.LENGTH_SHORT).show();
         }
     }

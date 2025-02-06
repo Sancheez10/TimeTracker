@@ -80,6 +80,7 @@ public class RegistroLaboral extends AppCompatActivity {
             searchView.setVisibility(View.VISIBLE);
             loadAllFichajes();
         } else {
+            searchView.setVisibility(View.VISIBLE);
             loadUserFichajes(currentUserUid);
         }
 
@@ -115,14 +116,16 @@ public class RegistroLaboral extends AppCompatActivity {
                 for (DataSnapshot fichajeSnap : snapshot.getChildren()) {
                     String fecha = fichajeSnap.getKey();  // Clave es la fecha (ej. "2025-02-04")
                     String entryTime = fichajeSnap.child("entry_time").getValue(String.class);
+                    String entryAddress = fichajeSnap.child("entry_address").getValue(String.class);
                     String exitTime = fichajeSnap.child("exit_time").getValue(String.class);
                     String totalHours = fichajeSnap.child("total_hours_worked").getValue(String.class);
 
                     if (totalHours != null && !totalHours.contains("-")) { // Evitar valores incorrectos
                         String entry = "Fecha: " + fecha +
+                                "\nDirección: " + entryAddress +
                                 "\nEntrada: " + entryTime +
                                 "\nSalida: " + exitTime +
-                                "\nHoras trabajadas: " + totalHours;
+                                "\nHoras trabajadas: " + totalHours + " \n";
                         fichajeList.add(entry);
                         fichajeListFull.add(entry);
                     }
@@ -156,27 +159,43 @@ public class RegistroLaboral extends AppCompatActivity {
                 }
 
                 for (DataSnapshot userSnap : snapshot.getChildren()) {
-                    String userId = userSnap.getKey(); // ID del usuario
+                    String userId = userSnap.getKey(); // UID del usuario
 
-                    for (DataSnapshot fichajeSnap : userSnap.getChildren()) {
-                        String fecha = fichajeSnap.getKey(); // Fecha del fichaje
-                        String entryTime = fichajeSnap.child("entry_time").getValue(String.class);
-                        String exitTime = fichajeSnap.child("exit_time").getValue(String.class);
-                        String totalHours = fichajeSnap.child("total_hours_worked").getValue(String.class);
+                    // Obtener el nombre del usuario antes de cargar los fichajes
+                    dbRef.child("workers").child(userId).child("email").addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot nameSnapshot) {
+                            String userName = nameSnapshot.getValue(String.class);
+                            if (userName == null) userName = "Usuario desconocido";
 
-                        if (totalHours != null && !totalHours.contains("-")) { // Filtrar valores inválidos
-                            String entry = "Usuario: " + userId +
-                                    "\nFecha: " + fecha +
-                                    "\nEntrada: " + entryTime +
-                                    "\nSalida: " + exitTime +
-                                    "\nHoras trabajadas: " + totalHours;
-                            fichajeList.add(entry);
-                            fichajeListFull.add(entry);
+                            for (DataSnapshot fichajeSnap : userSnap.getChildren()) {
+                                String fecha = fichajeSnap.getKey(); // Fecha del fichaje
+                                String entryAddress = fichajeSnap.child("entry_address").getValue(String.class);
+                                String entryTime = fichajeSnap.child("entry_time").getValue(String.class);
+                                String exitTime = fichajeSnap.child("exit_time").getValue(String.class);
+                                String totalHours = fichajeSnap.child("total_hours_worked").getValue(String.class);
+
+                                if (totalHours != null && !totalHours.contains("-")) { // Filtrar valores inválidos
+                                    String entry = "Usuario: " + userName +  // Aquí ponemos el nombre en vez del UID
+                                            "\nDirección: " + entryAddress +
+                                            "\nFecha: " + fecha +
+                                            "\nEntrada: " + entryTime +
+                                            "\nSalida: " + exitTime +
+                                            "\nHoras trabajadas: " + totalHours + "\n";
+                                    fichajeList.add(entry);
+                                    fichajeListFull.add(entry);
+                                }
+                            }
+
+                            adapter.notifyDataSetChanged();
                         }
-                    }
-                }
 
-                adapter.notifyDataSetChanged();
+                        @Override
+                        public void onCancelled(DatabaseError error) {
+                            Log.e("Firebase", "Error al obtener nombre del usuario", error.toException());
+                        }
+                    });
+                }
             }
 
             @Override
@@ -186,6 +205,7 @@ public class RegistroLaboral extends AppCompatActivity {
             }
         });
     }
+
 
 
 

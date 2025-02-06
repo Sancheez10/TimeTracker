@@ -76,6 +76,7 @@ public class AddAnotacionActivity extends AppCompatActivity {
 
         // Guardar la anotación en Firebase
         guardarAnotacionEnFirebase(anotacionFirebase);
+        etTextoAnotacion.setText("");
     }
 
 

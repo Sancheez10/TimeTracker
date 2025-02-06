@@ -15,38 +15,20 @@
         android:title="Historial"
         android:titleTextColor="@android:color/white" />
 
-    <!-- Botón "Atrás" alineado a la izquierda debajo de la Toolbar -->
-    <Button
-        android:id="@+id/btnAtras"
-        android:layout_width="wrap_content"
+    <!-- Barra de búsqueda debajo de la Toolbar -->
+    <SearchView
+        android:id="@+id/searchView"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Atrás"
-        android:background="?attr/selectableItemBackground"
         android:layout_below="@id/toolbarHistorial"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="10dp"
-        android:padding="10dp" />
-
-    <!-- Botón "Refrescar" alineado a la derecha del botón "Atrás" -->
-    <Button
-        android:id="@+id/btnRefrescar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Refrescar"
-        android:background="?attr/selectableItemBackground"
-        android:layout_below="@id/toolbarHistorial"
-        android:layout_toEndOf="@id/btnAtras"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="10dp"
-        android:padding="10dp" />
+        android:queryHint="Buscar anotaciones" />
 
     <!-- Lista de Anotaciones ocupando el resto del espacio -->
     <ListView
         android:id="@+id/listViewAnotaciones"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_below="@id/btnAtras"
+        android:layout_below="@id/searchView"
         android:layout_above="@id/btnMarcarComoVistas"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp" />

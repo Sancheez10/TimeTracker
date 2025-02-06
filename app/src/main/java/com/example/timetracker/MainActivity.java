@@ -52,6 +52,8 @@ public class MainActivity extends AppCompatActivity {
     private Handler handler = new Handler();
     private boolean hasEntryTime = false;
 
+    private Button bFinishWork;
+
 
 
     @Override
@@ -81,6 +83,9 @@ public class MainActivity extends AppCompatActivity {
 
         checkLocationSettings();
 
+        bFinishWork = findViewById(R.id.bFinishWork); // Vincular el botón
+        bFinishWork.setVisibility(View.INVISIBLE);
+
         databaseRef = FirebaseDatabase.getInstance().getReference("Timer");
         tvTimer.setText("00:00:00");
 
@@ -106,9 +111,12 @@ public class MainActivity extends AppCompatActivity {
             isWorking = true;
             tvStatus.setText("Trabajando");
             bWorkStatus.setText("Detener");
-            String address = ((TextView)findViewById(R.id.getLocationButton)).getText().toString(); // Obtener dirección
 
-            if (!hasEntryTime) { // Solo guarda la entrada si no ha sido registrada
+            // Hacer visible el botón de "Finalizar Trabajo"
+            bFinishWork.setVisibility(View.VISIBLE);
+
+            String address = ((TextView)findViewById(R.id.getLocationButton)).getText().toString();
+            if (!hasEntryTime) {
                 saveEntryToDatabase(startTime, address);
                 hasEntryTime = true;
             }
@@ -398,31 +406,47 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void calculateAndDisplayTotalTime() {
-        long totalTime = endTime - startTime;
-        int totalSeconds = (int) (totalTime / 1000);
+        long sessionTime = endTime - startTime;
+
+        // Obtener el tiempo total previo guardado en SharedPreferences
+        String totalTimeStr = sharedPreferences.getString("totalTimeWorked", "00:00:00");
+        long previousTotalTime = parseTimeToMilliseconds(totalTimeStr);
+
+        // Sumar el tiempo nuevo trabajado al total previo
+        long updatedTotalTime = previousTotalTime + sessionTime;
+
+        // Convertir a formato HH:mm:ss
+        int totalSeconds = (int) (updatedTotalTime / 1000);
         int hours = totalSeconds / 3600;
         int minutes = (totalSeconds % 3600) / 60;
         int seconds = totalSeconds % 60;
+        String newTotalTimeStr = String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds);
 
+        // Guardar el tiempo total actualizado en la base de datos
         String userId = sharedPreferences.getString("userId", "");
         String entryDateStr = formatDate(System.currentTimeMillis()); // Usar la fecha actual
-
-        // Referencia al nodo específico del día
         DatabaseReference userRef = databaseRef.child("Timer").child(userId).child(entryDateStr);
+        userRef.child("total_hours_worked").setValue(newTotalTimeStr);
 
-        // Formatear el tiempo total trabajado para este día
-        String totalTimeStr = String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds);
-
-        // Guardar el total de horas trabajadas en la base de datos
-        userRef.child("total_hours_worked").setValue(totalTimeStr);
-
-        // Guardar en SharedPreferences para futuras referencias
+        // Guardar el tiempo total actualizado en SharedPreferences
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("totalTimeWorked", totalTimeStr);
+        editor.putString("totalTimeWorked", newTotalTimeStr);
         editor.apply();
 
         // Actualizar la UI
-        tvTimer.setText(totalTimeStr);
+        tvTimer.setText(newTotalTimeStr);
+    }
+
+    // Método auxiliar para convertir HH:mm:ss a milisegundos
+    private long parseTimeToMilliseconds(String time) {
+        String[] parts = time.split(":");
+        if (parts.length == 3) {
+            int hours = Integer.parseInt(parts[0]);
+            int minutes = Integer.parseInt(parts[1]);
+            int seconds = Integer.parseInt(parts[2]);
+            return (hours * 3600 + minutes * 60 + seconds) * 1000L;
+        }
+        return 0;
     }
 
 
