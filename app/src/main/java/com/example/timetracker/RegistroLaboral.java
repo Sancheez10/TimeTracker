@@ -2,6 +2,7 @@ package com.example.timetracker;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -22,8 +23,12 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class RegistroLaboral extends AppCompatActivity {
 
@@ -37,6 +42,9 @@ public class RegistroLaboral extends AppCompatActivity {
     private String currentUserUid;
 
     private SharedPreferences sharedPreferences;
+    private Button btnSort;
+    private boolean ascendingOrder = true;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +58,13 @@ public class RegistroLaboral extends AppCompatActivity {
         recyclerViewFichajes.setLayoutManager(new LinearLayoutManager(this));
         searchView = findViewById(R.id.searchView);
         Button btnBack = findViewById(R.id.btn_back);
+        btnSort = findViewById(R.id.btnSort);
+        btnSort.setOnClickListener(v -> {
+            sortFichajesByDate();
+            ascendingOrder = !ascendingOrder; // Alterna entre ascendente y descendente
+        });
         btnBack.setOnClickListener(view -> finish());
+
 
         sharedPreferences = getSharedPreferences("workers_pref", Context.MODE_PRIVATE);
         String email = sharedPreferences.getString("email", "Usuario");
@@ -73,6 +87,9 @@ public class RegistroLaboral extends AppCompatActivity {
         fichajeListFull = new ArrayList<>();
         adapter = new RegistroLaboralAdapter(fichajeList);
         recyclerViewFichajes.setAdapter(adapter);
+
+        recyclerViewFichajes.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
+
 
         boolean isAdmin = sharedPreferences.getBoolean("isAdmin", false);
 
@@ -99,6 +116,24 @@ public class RegistroLaboral extends AppCompatActivity {
             }
         });
     }
+
+    private void sortFichajesByDate() {
+        fichajeList.sort((f1, f2) -> {
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                Date date1 = sdf.parse(f1.split("\n")[0].replace("Fecha: ", "").trim());
+                Date date2 = sdf.parse(f2.split("\n")[0].replace("Fecha: ", "").trim());
+
+                return ascendingOrder ? date1.compareTo(date2) : date2.compareTo(date1);
+            } catch (ParseException e) {
+                e.printStackTrace();
+                return 0;
+            }
+        });
+
+        adapter.notifyDataSetChanged();
+    }
+
 
     private void loadUserFichajes(String userId) {
         dbRef.child("Timer").child("Timer").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
